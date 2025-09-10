@@ -42,6 +42,11 @@ class TelaClientes(QWidget):
             ["Nome", "CPF/CNPJ", "Email", "Telefone", "Endereço", "Número"]
         )
 
+# 🔒 Bloqueia edição direta na tabela de clientes
+        self.tabela.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.tabela.setSelectionBehavior(QTableWidget.SelectRows)
+        self.tabela.setSelectionMode(QTableWidget.SingleSelection)
+
         # Faz com que a tabela se ajuste ao conteúdo
         header = self.tabela.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeToContents)

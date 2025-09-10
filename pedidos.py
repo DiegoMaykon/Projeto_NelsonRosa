@@ -110,6 +110,10 @@ class TelaPedidos(QWidget):
         self.tabela_pedidos.setColumnCount(5)
         self.tabela_pedidos.setHorizontalHeaderLabels(["Número", "Cliente", "Data", "Total", "Ações"])
         layout.addWidget(self.tabela_pedidos)
+# 🔒 Bloqueia edição direta na tabela de pedidos
+        self.tabela_pedidos.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.tabela_pedidos.setSelectionBehavior(QTableWidget.SelectRows)
+        self.tabela_pedidos.setSelectionMode(QTableWidget.SingleSelection)
 
         widget.setLayout(layout)
         self.atualizar_pedidos_finalizados()
