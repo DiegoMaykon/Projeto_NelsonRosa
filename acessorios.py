@@ -2,7 +2,7 @@ import json
 import os
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton,
-    QTableWidget, QTableWidgetItem, QHBoxLayout, QMessageBox, QTabWidget
+    QTableWidget, QTableWidgetItem, QMessageBox, QTabWidget
 )
 
 ARQUIVO_ACESSORIOS = "acessorios.json"
@@ -51,12 +51,11 @@ class TelaAcessorios(QWidget):
         layout = QVBoxLayout()
 
         self.tabela = QTableWidget()
-        self.tabela.setColumnCount(4)
-        self.tabela.setHorizontalHeaderLabels(["Código do Item", "Nome", "Descrição", "Valor (R$)"])
-        self.tabela.setColumnWidth(0, 120)
-        self.tabela.setColumnWidth(1, 180)
-        self.tabela.setColumnWidth(2, 220)
-        self.tabela.setColumnWidth(3, 100)
+        self.tabela.setColumnCount(3)
+        self.tabela.setHorizontalHeaderLabels(["Código do Item", "Nome", "Valor (R$)"])
+        self.tabela.setColumnWidth(0, 150)
+        self.tabela.setColumnWidth(1, 250)
+        self.tabela.setColumnWidth(2, 150)
 
         layout.addWidget(self.tabela)
 
@@ -76,8 +75,7 @@ class TelaAcessorios(QWidget):
         for row, acessorio in enumerate(self.acessorios):
             self.tabela.setItem(row, 0, QTableWidgetItem(acessorio["codigo"]))
             self.tabela.setItem(row, 1, QTableWidgetItem(acessorio["nome"]))
-            self.tabela.setItem(row, 2, QTableWidgetItem(acessorio["descricao"]))
-            self.tabela.setItem(row, 3, QTableWidgetItem(str(acessorio["valor"])))
+            self.tabela.setItem(row, 2, QTableWidgetItem(str(acessorio["valor"])))
 
     # -----------------------------
     # Aba de cadastro
@@ -95,11 +93,6 @@ class TelaAcessorios(QWidget):
         layout.addWidget(QLabel("Nome:"))
         layout.addWidget(self.input_nome)
 
-        self.input_descricao = QLineEdit()
-        self.input_descricao.setPlaceholderText("Descrição")
-        layout.addWidget(QLabel("Descrição:"))
-        layout.addWidget(self.input_descricao)
-
         self.input_valor = QLineEdit()
         self.input_valor.setPlaceholderText("Valor em R$")
         layout.addWidget(QLabel("Valor (R$):"))
@@ -114,7 +107,6 @@ class TelaAcessorios(QWidget):
     def salvar_novo_acessorio(self):
         codigo = self.input_codigo.text().strip()
         nome = self.input_nome.text().strip()
-        descricao = self.input_descricao.text().strip()
         valor = self.input_valor.text().strip()
 
         if not codigo or not nome or not valor:
@@ -127,14 +119,13 @@ class TelaAcessorios(QWidget):
             QMessageBox.warning(self, "Erro", "Digite um valor numérico válido!")
             return
 
-        novo_acessorio = {"codigo": codigo, "nome": nome, "descricao": descricao, "valor": valor}
+        novo_acessorio = {"codigo": codigo, "nome": nome, "valor": valor}
         self.acessorios.append(novo_acessorio)
         salvar_acessorios(self.acessorios)
         QMessageBox.information(self, "Sucesso", "Acessório cadastrado com sucesso!")
 
         self.input_codigo.clear()
         self.input_nome.clear()
-        self.input_descricao.clear()
         self.input_valor.clear()
 
         self.atualizar_tabela()
@@ -153,10 +144,6 @@ class TelaAcessorios(QWidget):
         self.edit_nome = QLineEdit()
         layout.addWidget(QLabel("Nome:"))
         layout.addWidget(self.edit_nome)
-
-        self.edit_descricao = QLineEdit()
-        layout.addWidget(QLabel("Descrição:"))
-        layout.addWidget(self.edit_descricao)
 
         self.edit_valor = QLineEdit()
         layout.addWidget(QLabel("Valor (R$):"))
@@ -177,7 +164,6 @@ class TelaAcessorios(QWidget):
         acessorio = self.acessorios[row]
         self.edit_codigo.setText(acessorio["codigo"])
         self.edit_nome.setText(acessorio["nome"])
-        self.edit_descricao.setText(acessorio["descricao"])
         self.edit_valor.setText(str(acessorio["valor"]))
 
         self.acessorio_em_edicao = row
@@ -187,7 +173,6 @@ class TelaAcessorios(QWidget):
     def salvar_edicao(self):
         codigo = self.edit_codigo.text().strip()
         nome = self.edit_nome.text().strip()
-        descricao = self.edit_descricao.text().strip()
         valor = self.edit_valor.text().strip()
 
         if not codigo or not nome or not valor:
@@ -203,7 +188,6 @@ class TelaAcessorios(QWidget):
         self.acessorios[self.acessorio_em_edicao] = {
             "codigo": codigo,
             "nome": nome,
-            "descricao": descricao,
             "valor": valor
         }
 
