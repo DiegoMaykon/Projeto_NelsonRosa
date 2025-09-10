@@ -56,6 +56,10 @@ class TelaAcessorios(QWidget):
         self.tabela.setColumnWidth(0, 150)
         self.tabela.setColumnWidth(1, 250)
         self.tabela.setColumnWidth(2, 150)
+        
+        self.tabela.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.tabela.setSelectionBehavior(QTableWidget.SelectRows)
+        self.tabela.setSelectionMode(QTableWidget.SingleSelection)
 
         layout.addWidget(self.tabela)
 
