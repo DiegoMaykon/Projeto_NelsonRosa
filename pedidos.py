@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
     QTabWidget, QCompleter, QComboBox, QSpinBox, QAbstractItemView
 )
 from PyQt5.QtCore import Qt, QDate
+from fpdf import FPDF
 
 ARQUIVO_PEDIDOS = "pedidos.json"
 ARQUIVO_CLIENTES = "clientes.json"
@@ -110,7 +111,7 @@ class TelaPedidos(QWidget):
         self.tabela_pedidos.setColumnCount(5)
         self.tabela_pedidos.setHorizontalHeaderLabels(["Número", "Cliente", "Data", "Total", "Ações"])
         layout.addWidget(self.tabela_pedidos)
-# 🔒 Bloqueia edição direta na tabela de pedidos
+        # 🔒 Bloqueia edição direta na tabela de pedidos
         self.tabela_pedidos.setEditTriggers(QTableWidget.NoEditTriggers)
         self.tabela_pedidos.setSelectionBehavior(QTableWidget.SelectRows)
         self.tabela_pedidos.setSelectionMode(QTableWidget.SingleSelection)
@@ -191,12 +192,19 @@ class TelaPedidos(QWidget):
             acoes = QWidget()
             hbox = QHBoxLayout()
             hbox.setContentsMargins(0, 0, 0, 0)
+
             btn_editar = QPushButton("Editar")
             btn_editar.clicked.connect(lambda checked, r=row: self.abrir_edicao(r))
             hbox.addWidget(btn_editar)
+
             btn_excluir = QPushButton("Excluir")
             btn_excluir.clicked.connect(lambda checked, r=row: self.excluir_pedido(r))
             hbox.addWidget(btn_excluir)
+
+            btn_pdf = QPushButton("Gerar PDF")
+            btn_pdf.clicked.connect(lambda checked, r=row: self.gerar_pdf_pedido(r))
+            hbox.addWidget(btn_pdf)
+
             acoes.setLayout(hbox)
             self.tabela_pedidos.setCellWidget(row, 4, acoes)
 
@@ -338,3 +346,27 @@ class TelaPedidos(QWidget):
             del self.pedidos[row]
             salvar_json(self.pedidos, ARQUIVO_PEDIDOS)
             self.atualizar_pedidos_finalizados()
+
+    # --------------------------
+    # Gerar PDF do Pedido
+    # --------------------------
+    def gerar_pdf_pedido(self, row):
+        pedido = self.pedidos[row]
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, f"Pedido Nº {pedido['numero']}", ln=True)
+        pdf.set_font("Arial", '', 12)
+        cliente_nome = pedido["cliente"].get("nome_razao") or pedido["cliente"].get("nome", "Sem Nome")
+        pdf.cell(0, 10, f"Cliente: {cliente_nome}", ln=True)
+        pdf.cell(0, 10, f"Data: {pedido.get('data','')}", ln=True)
+        pdf.cell(0, 10, f"Total: R$ {pedido.get('total',0):.2f}", ln=True)
+        pdf.ln(10)
+        pdf.cell(0, 10, "Itens do Pedido:", ln=True)
+
+        for item in pedido['itens']:
+            pdf.cell(0, 10, f"{item['nome']} - Qtd: {item['quantidade']} - Subtotal: R$ {item['subtotal']:.2f}", ln=True)
+
+        arquivo_pdf = f"Pedido_{pedido['numero']}.pdf"
+        pdf.output(arquivo_pdf)
+        QMessageBox.information(self, "PDF Gerado", f"PDF do pedido {pedido['numero']} salvo como {arquivo_pdf}!")
