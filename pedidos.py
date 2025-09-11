@@ -3,10 +3,10 @@ import os
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QTableWidget, QTableWidgetItem, QMessageBox,
-    QTabWidget, QCompleter, QComboBox, QSpinBox, QAbstractItemView, QFileDialog
+    QTabWidget, QCompleter, QComboBox, QSpinBox, QAbstractItemView,
+    QFileDialog
 )
 from PyQt5.QtCore import Qt, QDate
-from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 ARQUIVO_PEDIDOS = "pedidos.json"
@@ -33,12 +33,14 @@ class TelaPedidos(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Gerenciamento de Pedidos")
-        self.setGeometry(250, 250, 800, 500)
+        self.setGeometry(250, 250, 900, 500)
 
         self.pedidos = carregar_json(ARQUIVO_PEDIDOS)
         self.clientes = carregar_json(ARQUIVO_CLIENTES)
         self.acessorios = carregar_json(ARQUIVO_ACESSORIOS)
         self.itens_pedido = []
+
+        self.ultima_pasta = ""  # Guarda a última pasta usada para salvar PDFs
 
         self.inicializar_ui()
 
@@ -71,15 +73,15 @@ class TelaPedidos(QWidget):
         # Acessório
         hbox_acessorio = QHBoxLayout()
         hbox_acessorio.addWidget(QLabel("Acessório:"))
-        self.input_acessorio = QLineEdit()
-        nomes_acessorios = [a["nome"] for a in self.acessorios]
-        completer_acessorios = QCompleter(nomes_acessorios)
-        completer_acessorios.setCaseSensitivity(Qt.CaseInsensitive)
-        self.input_acessorio.setCompleter(completer_acessorios)
+        self.input_acessorio = QComboBox()
+        for a in self.acessorios:
+            self.input_acessorio.addItem(a["nome"])
         hbox_acessorio.addWidget(self.input_acessorio)
 
         hbox_acessorio.addWidget(QLabel("Quantidade:"))
-        self.input_qtd = QLineEdit()
+        self.input_qtd = QSpinBox()
+        self.input_qtd.setRange(1, 999)
+        self.input_qtd.setValue(1)
         hbox_acessorio.addWidget(self.input_qtd)
 
         btn_add_item = QPushButton("Adicionar Item")
@@ -101,6 +103,53 @@ class TelaPedidos(QWidget):
         widget.setLayout(layout)
         return widget
 
+    def adicionar_item(self):
+        nome = self.input_acessorio.currentText()
+        qtd = self.input_qtd.value()
+        acessorio = next((a for a in self.acessorios if a["nome"] == nome), None)
+        if not acessorio:
+            QMessageBox.warning(self, "Erro", "Acessório não encontrado!")
+            return
+
+        subtotal = qtd * float(acessorio["valor"])
+        item = {"nome": acessorio["nome"], "quantidade": qtd, "subtotal": subtotal}
+        self.itens_pedido.append(item)
+
+        row = self.tabela_itens.rowCount()
+        self.tabela_itens.insertRow(row)
+        self.tabela_itens.setItem(row, 0, QTableWidgetItem(acessorio["nome"]))
+        self.tabela_itens.setItem(row, 1, QTableWidgetItem(str(qtd)))
+        self.tabela_itens.setItem(row, 2, QTableWidgetItem(f"R$ {subtotal:.2f}"))
+
+    def finalizar_pedido(self):
+        cliente_nome = self.input_cliente.text().strip()
+        cliente = next(
+            (c for c in self.clientes if c.get("nome_razao", c.get("nome", "")).lower() == cliente_nome.lower()), None
+        )
+        if not cliente:
+            QMessageBox.warning(self, "Erro", "Cliente não encontrado!")
+            return
+
+        numero = len(self.pedidos) + 1
+        data = QDate.currentDate().toString("dd/MM/yyyy")
+
+        pedido = {
+            "numero": numero,
+            "cliente": cliente,
+            "itens": self.itens_pedido,
+            "data": data,
+            "total": sum(item["subtotal"] for item in self.itens_pedido),
+        }
+
+        self.pedidos.append(pedido)
+        salvar_json(self.pedidos, ARQUIVO_PEDIDOS)
+        QMessageBox.information(self, "Sucesso", f"Pedido nº {numero} salvo com sucesso!")
+
+        self.atualizar_pedidos_finalizados()
+        self.itens_pedido = []
+        self.tabela_itens.setRowCount(0)
+        self.input_cliente.clear()
+
     # --------------------------
     # Aba Pedidos Finalizados
     # --------------------------
@@ -120,66 +169,6 @@ class TelaPedidos(QWidget):
         self.atualizar_pedidos_finalizados()
         return widget
 
-    # --------------------------
-    # Adicionar Item ao Pedido
-    # --------------------------
-    def adicionar_item(self):
-        nome = self.input_acessorio.text().strip()
-        qtd_texto = self.input_qtd.text().strip()
-        if not nome or not qtd_texto.isdigit():
-            QMessageBox.warning(self, "Erro", "Preencha o acessório e a quantidade corretamente!")
-            return
-        qtd = int(qtd_texto)
-        acessorio = next((a for a in self.acessorios if a["nome"].lower() == nome.lower()), None)
-        if not acessorio:
-            QMessageBox.warning(self, "Erro", "Acessório não encontrado!")
-            return
-        subtotal = qtd * float(acessorio["valor"])
-        item = {"nome": acessorio["nome"], "quantidade": qtd, "subtotal": subtotal}
-        self.itens_pedido.append(item)
-
-        row = self.tabela_itens.rowCount()
-        self.tabela_itens.insertRow(row)
-        self.tabela_itens.setItem(row, 0, QTableWidgetItem(acessorio["nome"]))
-        self.tabela_itens.setItem(row, 1, QTableWidgetItem(str(qtd)))
-        self.tabela_itens.setItem(row, 2, QTableWidgetItem(f"R$ {subtotal:.2f}"))
-
-        self.input_acessorio.clear()
-        self.input_qtd.clear()
-
-    # --------------------------
-    # Finalizar Pedido
-    # --------------------------
-    def finalizar_pedido(self):
-        cliente_nome = self.input_cliente.text().strip()
-        cliente = next(
-            (c for c in self.clientes if c.get("nome_razao", c.get("nome", "")).lower() == cliente_nome.lower()), None
-        )
-        if not cliente:
-            QMessageBox.warning(self, "Erro", "Cliente não encontrado!")
-            return
-
-        numero = len(self.pedidos) + 1
-        data = QDate.currentDate().toString("dd/MM/yyyy")
-        pedido = {
-            "numero": numero,
-            "cliente": cliente,
-            "itens": self.itens_pedido,
-            "data": data,
-            "total": sum(item["subtotal"] for item in self.itens_pedido),
-        }
-        self.pedidos.append(pedido)
-        salvar_json(self.pedidos, ARQUIVO_PEDIDOS)
-        QMessageBox.information(self, "Sucesso", f"Pedido nº {numero} salvo com sucesso!")
-
-        self.atualizar_pedidos_finalizados()
-        self.itens_pedido = []
-        self.tabela_itens.setRowCount(0)
-        self.input_cliente.clear()
-
-    # --------------------------
-    # Atualizar Pedidos Finalizados
-    # --------------------------
     def atualizar_pedidos_finalizados(self):
         self.tabela_pedidos.setRowCount(len(self.pedidos))
         for row, pedido in enumerate(self.pedidos):
@@ -189,10 +178,10 @@ class TelaPedidos(QWidget):
             self.tabela_pedidos.setItem(row, 2, QTableWidgetItem(pedido.get("data", "")))
             self.tabela_pedidos.setItem(row, 3, QTableWidgetItem(f"R$ {pedido.get('total', 0):.2f}"))
 
-            # Botões Editar / Excluir
+            # Ações: Editar / Excluir
             acoes = QWidget()
             hbox = QHBoxLayout()
-            hbox.setContentsMargins(0,0,0,0)
+            hbox.setContentsMargins(0, 0, 0, 0)
             btn_editar = QPushButton("Editar")
             btn_editar.clicked.connect(lambda checked, r=row: self.abrir_edicao(r))
             hbox.addWidget(btn_editar)
@@ -203,18 +192,20 @@ class TelaPedidos(QWidget):
             self.tabela_pedidos.setCellWidget(row, 4, acoes)
 
             # Botão PDF
-            btn_pdf = QPushButton("Gerar PDF")
+            btn_pdf = QPushButton("Baixar PDF")
             btn_pdf.clicked.connect(lambda checked, r=row: self.gerar_pdf(r))
             self.tabela_pedidos.setCellWidget(row, 5, btn_pdf)
 
     # --------------------------
-    # Abrir edição de pedido (ComboBox + SpinBox)
+    # Edição com ComboBox + SpinBox
     # --------------------------
     def abrir_edicao(self, row):
         pedido = self.pedidos[row]
+
         self.janela_edicao = QWidget()
         self.janela_edicao.setWindowTitle(f"Editar Pedido nº {pedido['numero']}")
         self.janela_edicao.setGeometry(300, 300, 700, 500)
+
         layout = QVBoxLayout()
 
         # Cliente
@@ -235,9 +226,8 @@ class TelaPedidos(QWidget):
         self.tabela_edicao.setSelectionBehavior(QAbstractItemView.SelectRows)
         layout.addWidget(self.tabela_edicao)
 
-        # Preenche com itens existentes
         for item in pedido["itens"]:
-            self.adicionar_linha_edicao(item["nome"], item["quantidade"], item["subtotal"])
+            self.adicionar_linha_edicao(item["nome"], item["quantidade"])
 
         # Botões adicionar/remover
         hbox_botoes = QHBoxLayout()
@@ -249,7 +239,7 @@ class TelaPedidos(QWidget):
         hbox_botoes.addWidget(btn_remover_item)
         layout.addLayout(hbox_botoes)
 
-        # Botão salvar alterações
+        # Botão salvar
         btn_salvar = QPushButton("Salvar Alterações")
         btn_salvar.clicked.connect(lambda: self.salvar_edicao(row))
         layout.addWidget(btn_salvar)
@@ -257,7 +247,7 @@ class TelaPedidos(QWidget):
         self.janela_edicao.setLayout(layout)
         self.janela_edicao.show()
 
-    def adicionar_linha_edicao(self, nome=None, qtd=1, subtotal=0.0):
+    def adicionar_linha_edicao(self, nome=None, qtd=1):
         row_item = self.tabela_edicao.rowCount()
         self.tabela_edicao.insertRow(row_item)
 
@@ -275,11 +265,7 @@ class TelaPedidos(QWidget):
         spin.valueChanged.connect(lambda _, r=row_item: self.recalcular_subtotal(r))
         self.tabela_edicao.setCellWidget(row_item, 1, spin)
 
-        if subtotal == 0.0 and nome:
-            acessorio = next((a for a in self.acessorios if a["nome"] == nome), None)
-            if acessorio:
-                subtotal = qtd * float(acessorio["valor"])
-        self.tabela_edicao.setItem(row_item, 2, QTableWidgetItem(f"R$ {subtotal:.2f}"))
+        self.recalcular_subtotal(row_item)
 
     def remover_linha_edicao(self):
         linha = self.tabela_edicao.currentRow()
@@ -334,38 +320,46 @@ class TelaPedidos(QWidget):
     # Excluir Pedido
     # --------------------------
     def excluir_pedido(self, row):
-        numero = self.pedidos[row]["numero"]
-        confirmacao = QMessageBox.question(
-            self, "Confirmar", f"Excluir o pedido nº {numero}?", QMessageBox.Yes | QMessageBox.No
-        )
-        if confirmacao == QMessageBox.Yes:
-            del self.pedidos[row]
+        confirm = QMessageBox.question(self, "Confirmar Exclusão", f"Deseja excluir o pedido nº {self.pedidos[row]['numero']}?")
+        if confirm == QMessageBox.Yes:
+            self.pedidos.pop(row)
             salvar_json(self.pedidos, ARQUIVO_PEDIDOS)
             self.atualizar_pedidos_finalizados()
 
     # --------------------------
-    # Gerar PDF do Pedido
+    # Gerar PDF com última pasta
     # --------------------------
     def gerar_pdf(self, row):
         pedido = self.pedidos[row]
-        caminho, _ = QFileDialog.getSaveFileName(self, "Salvar PDF", f"Pedido_{pedido['numero']}.pdf", "PDF Files (*.pdf)")
+        nome_cliente = pedido["cliente"].get("nome_razao") or pedido["cliente"].get("nome", "")
+
+        # Usa a última pasta se houver
+        pasta_inicial = self.ultima_pasta if self.ultima_pasta else ""
+        caminho, _ = QFileDialog.getSaveFileName(
+            self,
+            "Salvar PDF",
+            os.path.join(pasta_inicial, f"pedido_{pedido['numero']}.pdf"),
+            "PDF Files (*.pdf)"
+        )
         if not caminho:
             return
 
-        c = canvas.Canvas(caminho, pagesize=A4)
-        largura, altura = A4
-        c.setFont("Helvetica", 12)
-        c.drawString(50, altura - 50, f"Pedido nº {pedido['numero']}")
-        cliente_nome = pedido["cliente"].get("nome_razao") or pedido["cliente"].get("nome", "Sem Nome")
-        c.drawString(50, altura - 70, f"Cliente: {cliente_nome}")
-        c.drawString(50, altura - 90, f"Data: {pedido.get('data','')}")
-        c.drawString(50, altura - 110, "Itens:")
+        # Atualiza a última pasta usada
+        self.ultima_pasta = os.path.dirname(caminho)
 
-        y = altura - 130
+        # Geração do PDF
+        c = canvas.Canvas(caminho)
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(50, 800, f"Pedido nº {pedido['numero']}")
+        c.setFont("Helvetica", 12)
+        c.drawString(50, 780, f"Cliente: {nome_cliente}")
+        c.drawString(50, 760, f"Data: {pedido.get('data', '')}")
+        y = 740
+        c.drawString(50, y, "Itens:")
+        y -= 20
         for item in pedido["itens"]:
             c.drawString(60, y, f"{item['nome']} - Qtd: {item['quantidade']} - Subtotal: R$ {item['subtotal']:.2f}")
             y -= 20
-
-        c.drawString(50, y - 10, f"Total: R$ {pedido.get('total', 0):.2f}")
+        c.drawString(50, y-10, f"Total: R$ {pedido.get('total', 0):.2f}")
         c.save()
-        QMessageBox.information(self, "PDF Gerado", f"PDF do Pedido nº {pedido['numero']} gerado com sucesso!")
+        QMessageBox.information(self, "PDF Gerado", f"PDF do pedido nº {pedido['numero']} salvo com sucesso!")
