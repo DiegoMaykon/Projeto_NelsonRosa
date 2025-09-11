@@ -3,7 +3,7 @@ import os
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QTableWidget, QTableWidgetItem, QMessageBox,
-    QTabWidget, QCompleter, QComboBox, QSpinBox, QAbstractItemView
+    QTabWidget, QCompleter, QComboBox, QSpinBox, QAbstractItemView, QFileDialog
 )
 from PyQt5.QtCore import Qt, QDate
 from fpdf import FPDF
@@ -108,13 +108,12 @@ class TelaPedidos(QWidget):
         layout = QVBoxLayout()
 
         self.tabela_pedidos = QTableWidget()
-        self.tabela_pedidos.setColumnCount(5)
-        self.tabela_pedidos.setHorizontalHeaderLabels(["Número", "Cliente", "Data", "Total", "Ações"])
-        layout.addWidget(self.tabela_pedidos)
-        # 🔒 Bloqueia edição direta na tabela de pedidos
+        self.tabela_pedidos.setColumnCount(6)
+        self.tabela_pedidos.setHorizontalHeaderLabels(["Número", "Cliente", "Data", "Total", "Ações", "PDF"])
         self.tabela_pedidos.setEditTriggers(QTableWidget.NoEditTriggers)
         self.tabela_pedidos.setSelectionBehavior(QTableWidget.SelectRows)
         self.tabela_pedidos.setSelectionMode(QTableWidget.SingleSelection)
+        layout.addWidget(self.tabela_pedidos)
 
         widget.setLayout(layout)
         self.atualizar_pedidos_finalizados()
@@ -192,163 +191,22 @@ class TelaPedidos(QWidget):
             acoes = QWidget()
             hbox = QHBoxLayout()
             hbox.setContentsMargins(0, 0, 0, 0)
-
             btn_editar = QPushButton("Editar")
             btn_editar.clicked.connect(lambda checked, r=row: self.abrir_edicao(r))
             hbox.addWidget(btn_editar)
-
             btn_excluir = QPushButton("Excluir")
             btn_excluir.clicked.connect(lambda checked, r=row: self.excluir_pedido(r))
             hbox.addWidget(btn_excluir)
-
-            btn_pdf = QPushButton("Gerar PDF")
-            btn_pdf.clicked.connect(lambda checked, r=row: self.gerar_pdf_pedido(r))
-            hbox.addWidget(btn_pdf)
-
             acoes.setLayout(hbox)
             self.tabela_pedidos.setCellWidget(row, 4, acoes)
 
-    # --------------------------
-    # Edição de Pedido com ComboBox/SpinBox
-    # --------------------------
-    def abrir_edicao(self, row):
-        pedido = self.pedidos[row]
-
-        self.janela_edicao = QWidget()
-        self.janela_edicao.setWindowTitle(f"Editar Pedido nº {pedido['numero']}")
-        self.janela_edicao.setGeometry(300, 300, 700, 500)
-
-        layout = QVBoxLayout()
-
-        # Cliente
-        hbox_cliente = QHBoxLayout()
-        hbox_cliente.addWidget(QLabel("Cliente:"))
-        self.edit_cliente = QLineEdit(pedido["cliente"].get("nome_razao") or pedido["cliente"].get("nome", ""))
-        nomes_clientes = [c.get("nome_razao", c.get("nome", "")) for c in self.clientes]
-        completer_clientes = QCompleter(nomes_clientes)
-        completer_clientes.setCaseSensitivity(Qt.CaseInsensitive)
-        self.edit_cliente.setCompleter(completer_clientes)
-        hbox_cliente.addWidget(self.edit_cliente)
-        layout.addLayout(hbox_cliente)
-
-        # Tabela editável
-        self.tabela_edicao = QTableWidget()
-        self.tabela_edicao.setColumnCount(3)
-        self.tabela_edicao.setHorizontalHeaderLabels(["Acessório", "Qtd", "Subtotal"])
-        self.tabela_edicao.setSelectionBehavior(QAbstractItemView.SelectRows)
-        layout.addWidget(self.tabela_edicao)
-
-        # Preenche com os itens
-        for item in pedido["itens"]:
-            self.adicionar_linha_edicao(item["nome"], item["quantidade"], item["subtotal"])
-
-        # Botões adicionar/remover
-        hbox_botoes = QHBoxLayout()
-        btn_add_item = QPushButton("Adicionar Item")
-        btn_add_item.clicked.connect(lambda: self.adicionar_linha_edicao())
-        hbox_botoes.addWidget(btn_add_item)
-
-        btn_remover_item = QPushButton("Remover Item")
-        btn_remover_item.clicked.connect(self.remover_linha_edicao)
-        hbox_botoes.addWidget(btn_remover_item)
-        layout.addLayout(hbox_botoes)
-
-        # Botão salvar
-        btn_salvar = QPushButton("Salvar Alterações")
-        btn_salvar.clicked.connect(lambda: self.salvar_edicao(row))
-        layout.addWidget(btn_salvar)
-
-        self.janela_edicao.setLayout(layout)
-        self.janela_edicao.show()
-
-    def adicionar_linha_edicao(self, nome=None, qtd=1, subtotal=0.0):
-        row_item = self.tabela_edicao.rowCount()
-        self.tabela_edicao.insertRow(row_item)
-
-        combo = QComboBox()
-        for a in self.acessorios:
-            combo.addItem(a["nome"])
-        if nome:
-            combo.setCurrentText(nome)
-        combo.currentIndexChanged.connect(lambda _, r=row_item: self.recalcular_subtotal(r))
-        self.tabela_edicao.setCellWidget(row_item, 0, combo)
-
-        spin = QSpinBox()
-        spin.setRange(1, 999)
-        spin.setValue(qtd)
-        spin.valueChanged.connect(lambda _, r=row_item: self.recalcular_subtotal(r))
-        self.tabela_edicao.setCellWidget(row_item, 1, spin)
-
-        if subtotal == 0.0 and nome:
-            acessorio = next((a for a in self.acessorios if a["nome"] == nome), None)
-            if acessorio:
-                subtotal = qtd * float(acessorio["valor"])
-        self.tabela_edicao.setItem(row_item, 2, QTableWidgetItem(f"R$ {subtotal:.2f}"))
-
-    def remover_linha_edicao(self):
-        linha = self.tabela_edicao.currentRow()
-        if linha >= 0:
-            self.tabela_edicao.removeRow(linha)
-
-    def recalcular_subtotal(self, row):
-        combo: QComboBox = self.tabela_edicao.cellWidget(row, 0)
-        spin: QSpinBox = self.tabela_edicao.cellWidget(row, 1)
-        if not combo or not spin:
-            return
-        nome = combo.currentText()
-        qtd = spin.value()
-        acessorio = next((a for a in self.acessorios if a["nome"] == nome), None)
-        if acessorio:
-            subtotal = qtd * float(acessorio["valor"])
-            self.tabela_edicao.setItem(row, 2, QTableWidgetItem(f"R$ {subtotal:.2f}"))
-
-    def salvar_edicao(self, row):
-        cliente_nome = self.edit_cliente.text().strip()
-        cliente = next(
-            (c for c in self.clientes if c.get("nome_razao", c.get("nome", "")).lower() == cliente_nome.lower()), None
-        )
-        if not cliente:
-            QMessageBox.warning(self, "Erro", "Cliente não encontrado!")
-            return
-
-        itens_editados = []
-        for r in range(self.tabela_edicao.rowCount()):
-            combo: QComboBox = self.tabela_edicao.cellWidget(r, 0)
-            spin: QSpinBox = self.tabela_edicao.cellWidget(r, 1)
-            if not combo or not spin:
-                continue
-            nome = combo.currentText()
-            qtd = spin.value()
-            acessorio = next((a for a in self.acessorios if a["nome"] == nome), None)
-            if acessorio:
-                subtotal = qtd * float(acessorio["valor"])
-                itens_editados.append({"nome": nome, "quantidade": qtd, "subtotal": subtotal})
-
-        self.pedidos[row]["cliente"] = cliente
-        self.pedidos[row]["itens"] = itens_editados
-        self.pedidos[row]["total"] = sum(item["subtotal"] for item in itens_editados)
-
-        salvar_json(self.pedidos, ARQUIVO_PEDIDOS)
-        QMessageBox.information(self, "Sucesso", "Pedido atualizado com sucesso!")
-
-        self.janela_edicao.close()
-        self.atualizar_pedidos_finalizados()
+            # botão gerar PDF
+            btn_pdf = QPushButton("Gerar PDF")
+            btn_pdf.clicked.connect(lambda checked, r=row: self.gerar_pdf_pedido(r))
+            self.tabela_pedidos.setCellWidget(row, 5, btn_pdf)
 
     # --------------------------
-    # Excluir Pedido
-    # --------------------------
-    def excluir_pedido(self, row):
-        numero = self.pedidos[row]["numero"]
-        confirmacao = QMessageBox.question(
-            self, "Confirmar", f"Excluir o pedido nº {numero}?", QMessageBox.Yes | QMessageBox.No
-        )
-        if confirmacao == QMessageBox.Yes:
-            del self.pedidos[row]
-            salvar_json(self.pedidos, ARQUIVO_PEDIDOS)
-            self.atualizar_pedidos_finalizados()
-
-    # --------------------------
-    # Gerar PDF do Pedido
+    # Função de gerar PDF
     # --------------------------
     def gerar_pdf_pedido(self, row):
         pedido = self.pedidos[row]
@@ -363,10 +221,35 @@ class TelaPedidos(QWidget):
         pdf.cell(0, 10, f"Total: R$ {pedido.get('total',0):.2f}", ln=True)
         pdf.ln(10)
         pdf.cell(0, 10, "Itens do Pedido:", ln=True)
-
         for item in pedido['itens']:
             pdf.cell(0, 10, f"{item['nome']} - Qtd: {item['quantidade']} - Subtotal: R$ {item['subtotal']:.2f}", ln=True)
 
-        arquivo_pdf = f"Pedido_{pedido['numero']}.pdf"
-        pdf.output(arquivo_pdf)
-        QMessageBox.information(self, "PDF Gerado", f"PDF do pedido {pedido['numero']} salvo como {arquivo_pdf}!")
+        arquivo_pdf, _ = QFileDialog.getSaveFileName(
+            self,
+            "Salvar PDF do Pedido",
+            f"Pedido_{pedido['numero']}.pdf",
+            "Arquivos PDF (*.pdf)"
+        )
+
+        if arquivo_pdf:
+            pdf.output(arquivo_pdf)
+            QMessageBox.information(self, "PDF Gerado", f"PDF do pedido {pedido['numero']} salvo como:\n{arquivo_pdf}")
+
+    # --------------------------
+    # Edição de Pedido (ComboBox/SpinBox)
+    # --------------------------
+    # (Mantém o código que você já tem para abrir_edicao, adicionar_linha_edicao,
+    # recalcular_subtotal, salvar_edicao e remover_linha_edicao)
+
+    # --------------------------
+    # Excluir Pedido
+    # --------------------------
+    def excluir_pedido(self, row):
+        numero = self.pedidos[row]["numero"]
+        confirmacao = QMessageBox.question(
+            self, "Confirmar", f"Excluir o pedido nº {numero}?", QMessageBox.Yes | QMessageBox.No
+        )
+        if confirmacao == QMessageBox.Yes:
+            del self.pedidos[row]
+            salvar_json(self.pedidos, ARQUIVO_PEDIDOS)
+            self.atualizar_pedidos_finalizados()

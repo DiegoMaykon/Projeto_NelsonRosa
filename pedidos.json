@@ -1,0 +1,22 @@
+[
+    {
+        "numero": 1,
+        "cliente": {
+            "nome": "diego maykon zgoda",
+            "cpf_cnpj": "07611432974",
+            "email": "diego tomahank@gmail.com",
+            "telefone": "(41)999746848",
+            "endereco": "Rua bacupari ",
+            "numero": "244"
+        },
+        "itens": [
+            {
+                "nome": "Roldana dupla trilho meia cana-gold",
+                "quantidade": 1,
+                "subtotal": 21.5
+            }
+        ],
+        "data": "10/09/2025",
+        "total": 21.5
+    }
+]
