@@ -326,10 +326,15 @@ class TelaPedidos(QWidget):
             salvar_json(self.pedidos, ARQUIVO_PEDIDOS)
             self.atualizar_pedidos_finalizados()
 
-    # --------------------------
-    # Gerar PDF com última pasta
+        # --------------------------
+    # Gerar PDF com tabela e última pasta
     # --------------------------
     def gerar_pdf(self, row):
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet
+
         pedido = self.pedidos[row]
         nome_cliente = pedido["cliente"].get("nome_razao") or pedido["cliente"].get("nome", "")
 
@@ -347,19 +352,36 @@ class TelaPedidos(QWidget):
         # Atualiza a última pasta usada
         self.ultima_pasta = os.path.dirname(caminho)
 
-        # Geração do PDF
-        c = canvas.Canvas(caminho)
-        c.setFont("Helvetica-Bold", 14)
-        c.drawString(50, 800, f"Pedido nº {pedido['numero']}")
-        c.setFont("Helvetica", 12)
-        c.drawString(50, 780, f"Cliente: {nome_cliente}")
-        c.drawString(50, 760, f"Data: {pedido.get('data', '')}")
-        y = 740
-        c.drawString(50, y, "Itens:")
-        y -= 20
+        # Configuração do PDF
+        doc = SimpleDocTemplate(caminho, pagesize=A4)
+        styles = getSampleStyleSheet()
+        elementos = []
+
+        # Cabeçalho
+        elementos.append(Paragraph(f"<b>Proposta Comercial nº {pedido['numero']}</b>", styles['Title']))
+        elementos.append(Paragraph(f"Cliente: {nome_cliente}", styles['Normal']))
+        elementos.append(Paragraph(f"Data: {pedido.get('data', '')}", styles['Normal']))
+        elementos.append(Spacer(1, 20))
+
+        # Tabela de Itens
+        dados = [["Acessório", "Qtd", "Subtotal (R$)"]]
         for item in pedido["itens"]:
-            c.drawString(60, y, f"{item['nome']} - Qtd: {item['quantidade']} - Subtotal: R$ {item['subtotal']:.2f}")
-            y -= 20
-        c.drawString(50, y-10, f"Total: R$ {pedido.get('total', 0):.2f}")
-        c.save()
+            dados.append([item['nome'], str(item['quantidade']), f"{item['subtotal']:.2f}"])
+
+        tabela = Table(dados, colWidths=[250, 80, 100])
+        tabela.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ]))
+        elementos.append(tabela)
+
+        elementos.append(Spacer(1, 20))
+        elementos.append(Paragraph(f"<b>Total: R$ {pedido.get('total', 0):.2f}</b>", styles['Heading2']))
+
+        # Gera o PDF
+        doc.build(elementos)
         QMessageBox.information(self, "PDF Gerado", f"PDF do pedido nº {pedido['numero']} salvo com sucesso!")
+
