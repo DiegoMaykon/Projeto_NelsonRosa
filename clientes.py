@@ -11,7 +11,7 @@ class TelaClientes(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Cadastro de Clientes")
-        self.setGeometry(250, 250, 850, 500)
+        self.setGeometry(250, 250, 1050, 500)
 
         self.clientes = self.carregar_clientes()
         self.inicializar_ui()
@@ -35,14 +35,14 @@ class TelaClientes(QWidget):
 
         layout.addLayout(btn_layout)
 
-        # Tabela de clientes
+        # Tabela de clientes (agora com 9 colunas)
         self.tabela = QTableWidget()
-        self.tabela.setColumnCount(6)
+        self.tabela.setColumnCount(9)
         self.tabela.setHorizontalHeaderLabels(
-            ["Nome", "CPF/CNPJ", "Email", "Telefone", "Endereço", "Número"]
+            ["Nome", "CPF/CNPJ", "Email", "Telefone", "Endereço", "Número", "Cidade", "Estado", "IE"]
         )
 
-# 🔒 Bloqueia edição direta na tabela de clientes
+        # 🔒 Bloqueia edição direta na tabela de clientes
         self.tabela.setEditTriggers(QTableWidget.NoEditTriggers)
         self.tabela.setSelectionBehavior(QTableWidget.SelectRows)
         self.tabela.setSelectionMode(QTableWidget.SingleSelection)
@@ -82,6 +82,9 @@ class TelaClientes(QWidget):
             self.tabela.setItem(row, 3, QTableWidgetItem(cliente.get("telefone", "")))
             self.tabela.setItem(row, 4, QTableWidgetItem(cliente.get("endereco", "")))
             self.tabela.setItem(row, 5, QTableWidgetItem(cliente.get("numero", "")))
+            self.tabela.setItem(row, 6, QTableWidgetItem(cliente.get("cidade", "")))
+            self.tabela.setItem(row, 7, QTableWidgetItem(cliente.get("estado", "")))
+            self.tabela.setItem(row, 8, QTableWidgetItem(cliente.get("ie", "")))
 
     # --------------------------
     # Abrir adicionar cliente
@@ -132,7 +135,7 @@ class JanelaEdicaoCliente(QWidget):
         self.parent = parent
         self.linha = linha
         self.setWindowTitle("Editar Cliente" if cliente else "Adicionar Cliente")
-        self.setGeometry(300, 300, 650, 300)
+        self.setGeometry(300, 300, 700, 400)
 
         self.inicializar_ui(cliente)
 
@@ -170,6 +173,24 @@ class JanelaEdicaoCliente(QWidget):
 
         layout.addLayout(form_layout2)
 
+        # Linha 3: Cidade e Estado
+        form_layout3 = QHBoxLayout()
+        self.input_cidade = QLineEdit(cliente.get("cidade", "") if cliente else "")
+        form_layout3.addWidget(QLabel("Cidade:"))
+        form_layout3.addWidget(self.input_cidade)
+
+        self.input_estado = QLineEdit(cliente.get("estado", "") if cliente else "")
+        form_layout3.addWidget(QLabel("Estado:"))
+        form_layout3.addWidget(self.input_estado)
+        layout.addLayout(form_layout3)
+
+        # Linha 4: Inscrição Estadual (IE)
+        form_layout4 = QHBoxLayout()
+        self.input_ie = QLineEdit(cliente.get("ie", "") if cliente else "")
+        form_layout4.addWidget(QLabel("IE:"))
+        form_layout4.addWidget(self.input_ie)
+        layout.addLayout(form_layout4)
+
         # Botão salvar
         btn_salvar = QPushButton("Salvar")
         btn_salvar.clicked.connect(self.salvar)
@@ -184,6 +205,9 @@ class JanelaEdicaoCliente(QWidget):
         telefone = self.input_telefone.text()
         endereco = self.input_endereco.text()
         numero = self.input_numero.text()
+        cidade = self.input_cidade.text()
+        estado = self.input_estado.text()
+        ie = self.input_ie.text()
 
         if not nome or not cpf:
             QMessageBox.warning(self, "Erro", "Nome e CPF/CNPJ são obrigatórios!")
@@ -195,7 +219,10 @@ class JanelaEdicaoCliente(QWidget):
             "email": email,
             "telefone": telefone,
             "endereco": endereco,
-            "numero": numero
+            "numero": numero,
+            "cidade": cidade,
+            "estado": estado,
+            "ie": ie
         }
 
         if self.linha is not None:
