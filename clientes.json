@@ -3,8 +3,16 @@
         "nome": "diego maykon zgoda",
         "cpf_cnpj": "07611432974",
         "email": "diego tomahank@gmail.com",
-        "telefone": "(41)999746848",
+        "telefone": "(41)999746849",
         "endereco": "Rua bacupari ",
         "numero": "244"
+    },
+    {
+        "nome": "elisa rosa",
+        "cpf_cnpj": "07611432974",
+        "email": "perfectlisa@gmail",
+        "telefone": "",
+        "endereco": "",
+        "numero": ""
     }
 ]

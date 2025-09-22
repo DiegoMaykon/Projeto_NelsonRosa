@@ -8,5 +8,10 @@
         "codigo": "RSU-200",
         "nome": "Roldana dupla trilho meia cana -suprema",
         "valor": 20.5
+    },
+    {
+        "codigo": "su200",
+        "nome": "Roldna Tripla",
+        "valor": 15.0
     }
 ]

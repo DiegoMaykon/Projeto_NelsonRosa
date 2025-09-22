@@ -326,14 +326,16 @@ class TelaPedidos(QWidget):
             salvar_json(self.pedidos, ARQUIVO_PEDIDOS)
             self.atualizar_pedidos_finalizados()
 
-        # --------------------------
-    # Gerar PDF com tabela e última pasta
+     # --------------------------
+    # Gerar PDF com cabeçalho + tabela e última pasta
     # --------------------------
     def gerar_pdf(self, row):
-        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.platypus import (
+            SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        )
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4
-        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
         pedido = self.pedidos[row]
         nome_cliente = pedido["cliente"].get("nome_razao") or pedido["cliente"].get("nome", "")
@@ -357,13 +359,33 @@ class TelaPedidos(QWidget):
         styles = getSampleStyleSheet()
         elementos = []
 
-        # Cabeçalho
+        # --- Cabeçalho da empresa (direita) ---
+        estilo_topo = ParagraphStyle(
+            name="Topo",
+            fontSize=9,
+            alignment=2,   # 2 = direita
+            leading=12
+        )
+        cabecalho = [
+            "Iorli de Fatima Marcondes Rosa Representações.",
+            "CNPJ: 34.308.499/0001-10",
+            "Inscrição Municipal: 1706084.2144-6",
+            "R. Arcendino Rosa Neves 278 - Xaxim, Curitiba - PR",
+            "Telefone: (41) 99914-7644",
+            "Email: Nelsonrosaperfis@yahoo.com.br"
+        ]
+        for linha in cabecalho:
+            elementos.append(Paragraph(linha, estilo_topo))
+
+        elementos.append(Spacer(1, 20))
+
+        # --- Título da Proposta ---
         elementos.append(Paragraph(f"<b>Proposta Comercial nº {pedido['numero']}</b>", styles['Title']))
         elementos.append(Paragraph(f"Cliente: {nome_cliente}", styles['Normal']))
         elementos.append(Paragraph(f"Data: {pedido.get('data', '')}", styles['Normal']))
         elementos.append(Spacer(1, 20))
 
-        # Tabela de Itens
+        # --- Tabela de Itens ---
         dados = [["Acessório", "Qtd", "Subtotal (R$)"]]
         for item in pedido["itens"]:
             dados.append([item['nome'], str(item['quantidade']), f"{item['subtotal']:.2f}"])
@@ -381,7 +403,8 @@ class TelaPedidos(QWidget):
         elementos.append(Spacer(1, 20))
         elementos.append(Paragraph(f"<b>Total: R$ {pedido.get('total', 0):.2f}</b>", styles['Heading2']))
 
-        # Gera o PDF
+        # --- Gera o PDF ---
         doc.build(elementos)
         QMessageBox.information(self, "PDF Gerado", f"PDF do pedido nº {pedido['numero']} salvo com sucesso!")
+
 
