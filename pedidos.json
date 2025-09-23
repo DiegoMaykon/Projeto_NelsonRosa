@@ -1,0 +1,40 @@
+[
+    {
+        "numero": 1,
+        "cliente": {
+            "nome": "diego maykon",
+            "cpf_cnpj": "07611432974",
+            "email": "diego882@gmail.com",
+            "telefone": "41987984927",
+            "endereco": "bacupari",
+            "numero": "244",
+            "cidade": "curitiba",
+            "estado": "pr",
+            "ie": "isento"
+        },
+        "itens": [
+            {
+                "nome": "Roldana dupla trilho meia cana-gold",
+                "quantidade": 2,
+                "subtotal": 40.0
+            },
+            {
+                "nome": "Roldana dupla trilho meia cana-gold",
+                "quantidade": 2,
+                "subtotal": 40.0
+            },
+            {
+                "nome": "Roldana dupla trilho meia cana-gold",
+                "quantidade": 2,
+                "subtotal": 40.0
+            },
+            {
+                "nome": "Roldana dupla trilho meia cana-gold",
+                "quantidade": 2,
+                "subtotal": 40.0
+            }
+        ],
+        "data": "22/09/2025",
+        "total": 160.0
+    }
+]

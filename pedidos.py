@@ -326,21 +326,21 @@ class TelaPedidos(QWidget):
             salvar_json(self.pedidos, ARQUIVO_PEDIDOS)
             self.atualizar_pedidos_finalizados()
 
-     # --------------------------
-    # Gerar PDF com cabeçalho + tabela e última pasta
-    # --------------------------
+
     def gerar_pdf(self, row):
         from reportlab.platypus import (
-            SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+            SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, Flowable
         )
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        import os
 
         pedido = self.pedidos[row]
-        nome_cliente = pedido["cliente"].get("nome_razao") or pedido["cliente"].get("nome", "")
+        cliente = pedido["cliente"]
+        nome_cliente = cliente.get("nome_razao") or cliente.get("nome", "")
 
-        # Usa a última pasta se houver
+        # Seleciona pasta e nome do arquivo
         pasta_inicial = self.ultima_pasta if self.ultima_pasta else ""
         caminho, _ = QFileDialog.getSaveFileName(
             self,
@@ -351,60 +351,103 @@ class TelaPedidos(QWidget):
         if not caminho:
             return
 
-        # Atualiza a última pasta usada
         self.ultima_pasta = os.path.dirname(caminho)
 
         # Configuração do PDF
-        doc = SimpleDocTemplate(caminho, pagesize=A4)
+        doc = SimpleDocTemplate(caminho, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
         styles = getSampleStyleSheet()
         elementos = []
 
-        # --- Cabeçalho da empresa (direita) ---
-        estilo_topo = ParagraphStyle(
-            name="Topo",
-            fontSize=9,
-            alignment=2,   # 2 = direita
-            leading=12
-        )
-        cabecalho = [
-            "Iorli de Fatima Marcondes Rosa Representações.",
-            "CNPJ: 34.308.499/0001-10",
-            "Inscrição Municipal: 1706084.2144-6",
-            "R. Arcendino Rosa Neves 278 - Xaxim, Curitiba - PR",
-            "Telefone: (41) 99914-7644",
-            "Email: Nelsonrosaperfis@yahoo.com.br"
+        # --- Logo ---
+        logo_path = "logo.png"  # caminho da sua logo
+        if os.path.exists(logo_path):
+            img_logo = Image(logo_path, width=100, height=50)
+            elementos.append(img_logo)
+        elementos.append(Spacer(1, 20))
+
+        # --- Estilos para tabelas ---
+        estilo_cabecalho = ParagraphStyle(name="Cabecalho", fontSize=10, fontName='Helvetica-Bold')
+        estilo_normal = ParagraphStyle(name="Normal", fontSize=9, fontName='Helvetica')
+
+        # --- Dados Empresa (direita) ---
+        dados_empresa = [
+            ["Iorli de Fatima Marcondes Rosa Representações"],
+            ["CNPJ: 34.308.499/0001-10"],
+            ["Inscrição Municipal: 1706084.2144-6"],
+            ["R. Arcendino Rosa Neves 278 - Xaxim, Curitiba - PR"],
+            ["Telefone: (41) 99914-7644"],
+            ["Email: Nelsonrosaperfis@yahoo.com.br"]
         ]
-        for linha in cabecalho:
-            elementos.append(Paragraph(linha, estilo_topo))
+        tabela_empresa = Table(dados_empresa, colWidths=[250], hAlign='RIGHT')
+        tabela_empresa.setStyle(TableStyle([
+            ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+            ('BOX', (0,0), (-1,-1), 1, colors.black),
+            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey)
+        ]))
 
+        # --- Dados Cliente (esquerda) ---
+        dados_cliente = [
+            ["Dados do Cliente:"],
+            [f"Nome: {cliente.get('nome', '')}"],
+            [f"CPF/CNPJ: {cliente.get('cpf_cnpj', '')}"],
+            [f"Email: {cliente.get('email', '')}"],
+            [f"Telefone: {cliente.get('telefone', '')}"],
+            [f"Endereço: {cliente.get('endereco', '')}"],
+            [f"Número: {cliente.get('numero', '')}"],
+            [f"Cidade: {cliente.get('cidade', '')}"],
+            [f"Estado: {cliente.get('estado', '')}"],
+            [f"IE: {cliente.get('ie', '')}"]
+        ]
+        tabela_cliente = Table(dados_cliente, colWidths=[250], hAlign='LEFT')
+        tabela_cliente.setStyle(TableStyle([
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+            ('BOX', (0,0), (-1,-1), 1, colors.black),
+            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey)
+        ]))
+
+        # --- Coloca Empresa e Cliente na mesma linha ---
+        from reportlab.platypus import KeepTogether
+        tabela_horizontal = Table([[tabela_cliente, tabela_empresa]], colWidths=[270, 270])
+        tabela_horizontal.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'TOP')
+        ]))
+        elementos.append(tabela_horizontal)
         elementos.append(Spacer(1, 20))
 
-        # --- Título da Proposta ---
+        # --- Título e número do pedido ---
         elementos.append(Paragraph(f"<b>Proposta Comercial nº {pedido['numero']}</b>", styles['Title']))
-        elementos.append(Paragraph(f"Cliente: {nome_cliente}", styles['Normal']))
-        elementos.append(Paragraph(f"Data: {pedido.get('data', '')}", styles['Normal']))
-        elementos.append(Spacer(1, 20))
+        elementos.append(Spacer(1, 10))
 
         # --- Tabela de Itens ---
-        dados = [["Acessório", "Qtd", "Subtotal (R$)"]]
+        dados_itens = [["Acessório", "Qtd", "Subtotal (R$)"]]
         for item in pedido["itens"]:
-            dados.append([item['nome'], str(item['quantidade']), f"{item['subtotal']:.2f}"])
+            dados_itens.append([item['nome'], str(item['quantidade']), f"{item['subtotal']:.2f}"])
 
-        tabela = Table(dados, colWidths=[250, 80, 100])
-        tabela.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-            ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        tabela_itens = Table(dados_itens, colWidths=[250, 80, 100])
+        tabela_itens.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+            ('GRID', (0,0), (-1,-1), 1, colors.black),
+            ('ALIGN', (1,1), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+            ('TOPPADDING', (0,0), (-1,-1), 4),
         ]))
-        elementos.append(tabela)
+        elementos.append(tabela_itens)
+        elementos.append(Spacer(1, 15))
 
-        elementos.append(Spacer(1, 20))
+        # --- Total ---
         elementos.append(Paragraph(f"<b>Total: R$ {pedido.get('total', 0):.2f}</b>", styles['Heading2']))
 
-        # --- Gera o PDF ---
+        # --- Gera PDF ---
         doc.build(elementos)
         QMessageBox.information(self, "PDF Gerado", f"PDF do pedido nº {pedido['numero']} salvo com sucesso!")
+
+
 
 
