@@ -35,11 +35,11 @@ class TelaClientes(QWidget):
 
         layout.addLayout(btn_layout)
 
-        # Tabela de clientes (agora com 9 colunas)
+        # Tabela de clientes (agora com 10 colunas incluindo Bairro)
         self.tabela = QTableWidget()
-        self.tabela.setColumnCount(9)
+        self.tabela.setColumnCount(10)
         self.tabela.setHorizontalHeaderLabels(
-            ["Nome", "CPF/CNPJ", "Email", "Telefone", "Endereço", "Número", "Cidade", "Estado", "IE"]
+            ["Nome", "CPF/CNPJ", "Email", "Telefone", "Endereço", "Número", "Bairro", "Cidade", "Estado", "IE"]
         )
 
         # 🔒 Bloqueia edição direta na tabela de clientes
@@ -82,9 +82,10 @@ class TelaClientes(QWidget):
             self.tabela.setItem(row, 3, QTableWidgetItem(cliente.get("telefone", "")))
             self.tabela.setItem(row, 4, QTableWidgetItem(cliente.get("endereco", "")))
             self.tabela.setItem(row, 5, QTableWidgetItem(cliente.get("numero", "")))
-            self.tabela.setItem(row, 6, QTableWidgetItem(cliente.get("cidade", "")))
-            self.tabela.setItem(row, 7, QTableWidgetItem(cliente.get("estado", "")))
-            self.tabela.setItem(row, 8, QTableWidgetItem(cliente.get("ie", "")))
+            self.tabela.setItem(row, 6, QTableWidgetItem(cliente.get("bairro", "")))  # Novo campo Bairro
+            self.tabela.setItem(row, 7, QTableWidgetItem(cliente.get("cidade", "")))
+            self.tabela.setItem(row, 8, QTableWidgetItem(cliente.get("estado", "")))
+            self.tabela.setItem(row, 9, QTableWidgetItem(cliente.get("ie", "")))
 
     # --------------------------
     # Abrir adicionar cliente
@@ -163,9 +164,9 @@ class JanelaEdicaoCliente(QWidget):
         form_layout2.addWidget(QLabel("Telefone:"))
         form_layout2.addWidget(self.input_telefone)
 
-        self.input_endereco = QLineEdit(cliente.get("endereco", "") if cliente else "")
-        form_layout2.addWidget(QLabel("Endereço:"))
-        form_layout2.addWidget(self.input_endereco)
+        self.input_rua = QLineEdit(cliente.get("endereco", "") if cliente else "")
+        form_layout2.addWidget(QLabel("Rua:"))
+        form_layout2.addWidget(self.input_rua)
 
         self.input_numero = QLineEdit(cliente.get("numero", "") if cliente else "")
         form_layout2.addWidget(QLabel("Número:"))
@@ -173,8 +174,12 @@ class JanelaEdicaoCliente(QWidget):
 
         layout.addLayout(form_layout2)
 
-        # Linha 3: Cidade e Estado
+        # Linha 3: Bairro, Cidade, Estado
         form_layout3 = QHBoxLayout()
+        self.input_bairro = QLineEdit(cliente.get("bairro", "") if cliente else "")
+        form_layout3.addWidget(QLabel("Bairro:"))
+        form_layout3.addWidget(self.input_bairro)
+
         self.input_cidade = QLineEdit(cliente.get("cidade", "") if cliente else "")
         form_layout3.addWidget(QLabel("Cidade:"))
         form_layout3.addWidget(self.input_cidade)
@@ -203,8 +208,9 @@ class JanelaEdicaoCliente(QWidget):
         cpf = self.input_cpf_cnpj.text()
         email = self.input_email.text()
         telefone = self.input_telefone.text()
-        endereco = self.input_endereco.text()
+        rua = self.input_rua.text()
         numero = self.input_numero.text()
+        bairro = self.input_bairro.text()  # Novo campo Bairro
         cidade = self.input_cidade.text()
         estado = self.input_estado.text()
         ie = self.input_ie.text()
@@ -218,8 +224,9 @@ class JanelaEdicaoCliente(QWidget):
             "cpf_cnpj": cpf,
             "email": email,
             "telefone": telefone,
-            "endereco": endereco,
+            "rua": rua,
             "numero": numero,
+            "bairro": bairro,  # Adiciona Bairro
             "cidade": cidade,
             "estado": estado,
             "ie": ie

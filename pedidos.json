@@ -2,15 +2,16 @@
     {
         "numero": 1,
         "cliente": {
-            "nome": "diego maykon",
+            "nome": "Diego Maykon Zgoda",
             "cpf_cnpj": "07611432974",
-            "email": "diego882@gmail.com",
-            "telefone": "41987984927",
-            "endereco": "bacupari",
+            "email": "Diegomaykon882@gmail.com",
+            "telefone": "(41)98798-4927",
+            "rua": "Bacupari",
             "numero": "244",
-            "cidade": "curitiba",
-            "estado": "pr",
-            "ie": "isento"
+            "bairro": "Uberaba",
+            "cidade": "Curitiba",
+            "estado": "Pr",
+            "ie": "Isento"
         },
         "itens": [
             {

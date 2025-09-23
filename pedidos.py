@@ -359,9 +359,9 @@ class TelaPedidos(QWidget):
         elementos = []
 
         # --- Logo ---
-        logo_path = "logo.png"  # caminho da sua logo
+        logo_path = """D:\Projeto_NelsonRosa\LogoALMETAIS.PNG"""  # caminho da sua logo
         if os.path.exists(logo_path):
-            img_logo = Image(logo_path, width=100, height=50)
+            img_logo = Image(logo_path, width=100, height=100,hAlign="LEFT")
             elementos.append(img_logo)
         elementos.append(Spacer(1, 20))
 
@@ -394,7 +394,7 @@ class TelaPedidos(QWidget):
             [f"CPF/CNPJ: {cliente.get('cpf_cnpj', '')}"],
             [f"Email: {cliente.get('email', '')}"],
             [f"Telefone: {cliente.get('telefone', '')}"],
-            [f"Endereço: {cliente.get('endereco', '')}"],
+            [f"Rua: {cliente.get('rua', '')}"],
             [f"Número: {cliente.get('numero', '')}"],
             [f"Cidade: {cliente.get('cidade', '')}"],
             [f"Estado: {cliente.get('estado', '')}"],
