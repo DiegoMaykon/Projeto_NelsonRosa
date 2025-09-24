@@ -373,7 +373,7 @@ class TelaPedidos(QWidget):
         dados_empresa = [
             ["Iorli de Fatima Marcondes Rosa Representações"],
             ["CNPJ: 34.308.499/0001-10"],
-            ["Inscrição Municipal: 1706084.2144-6"],
+            ["IE: 1706084.2144-6"],
             ["R. Arcendino Rosa Neves 278 - Xaxim, Curitiba - PR"],
             ["Telefone: (41) 99914-7644"],
             ["Email: Nelsonrosaperfis@yahoo.com.br"]
