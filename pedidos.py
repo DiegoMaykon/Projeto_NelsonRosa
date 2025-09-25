@@ -376,8 +376,8 @@ class TelaPedidos(QWidget):
         tabela_empresa = Table(dados_empresa, colWidths=[400])
         tabela_empresa.setStyle(TableStyle([
             ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
-            ('FONTSIZE', (0,0), (-1,-1), 8),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 2),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 1.7),
             ('BOX', (0,0), (-1,-1), 1, colors.black),
             ('BACKGROUND', (0,0), (-1,0), colors.lightgrey)
         ]))
@@ -402,10 +402,7 @@ class TelaPedidos(QWidget):
             [f"CPF/CNPJ: {cliente.get('cpf_cnpj', '')}"],
             [f"Email: {cliente.get('email', '')}"],
             [f"Telefone: {cliente.get('telefone', '')}"],
-            [f"Rua: {cliente.get('rua', '')}"],
-            [f"Número: {cliente.get('numero', '')}"],
-            [f"Cidade: {cliente.get('cidade', '')}"],
-            [f"Estado: {cliente.get('estado', '')}"],
+            [f"Endereço:R.{cliente.get('rua', '')},N° {cliente.get('numero', '')} - {cliente.get('bairro', '')} - {cliente.get('cidade', '')} - {cliente.get('estado', '')}."],
             [f"IE: {cliente.get('ie', '')}"]
         ]
         tabela_cliente = Table(dados_cliente, colWidths=[250], hAlign='LEFT')
