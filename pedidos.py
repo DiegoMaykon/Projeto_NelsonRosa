@@ -423,15 +423,27 @@ class TelaPedidos(QWidget):
         elementos.append(Spacer(1, 10))
 
         # --- Tabela de Itens ---
-        dados_itens = [["Acessório", "Qtd", "Subtotal (R$)"]]
-        for item in pedido["itens"]:
-            dados_itens.append([item['nome'], str(item['quantidade']), f"{item['subtotal']:.2f}"])
 
-        tabela_itens = Table(dados_itens, colWidths=[250, 80, 100])
+# Carrega o JSON de acessórios
+        with open(r"D:\Projeto_NelsonRosa\acessorios.json", "r", encoding="utf-8") as f:
+            lista_acessorios = json.load(f)
+
+        dados_itens = [["Código", "Acessório", "Qtd", "Subtotal (R$)"]]
+        for item in pedido["itens"]:
+            # Busca o código correspondente pelo nome
+            codigo = next((a["codigo"] for a in lista_acessorios if a["nome"] == item["nome"]), "")
+            dados_itens.append([
+                codigo,
+                item['nome'],
+                str(item['quantidade']),
+                f"{item['subtotal']:.2f}"
+            ])
+
+        tabela_itens = Table(dados_itens, colWidths=[70, 270, 50, 130],hAlign="LEFT")
         tabela_itens.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
             ('GRID', (0,0), (-1,-1), 1, colors.black),
-            ('ALIGN', (1,1), (-1,-1), 'CENTER'),
+            ('ALIGN', (2,1), (-1,-1), 'CENTER'),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
             ('FONTSIZE', (0,0), (-1,-1), 9),
             ('BOTTOMPADDING', (0,0), (-1,-1), 4),
@@ -439,6 +451,9 @@ class TelaPedidos(QWidget):
         ]))
         elementos.append(tabela_itens)
         elementos.append(Spacer(1, 15))
+
+
+
 
         # --- Total ---
         elementos.append(Paragraph(f"<b>Total: R$ {pedido.get('total', 0):.2f}</b>", styles['Heading2']))
