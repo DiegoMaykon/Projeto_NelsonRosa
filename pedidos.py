@@ -329,7 +329,7 @@ class TelaPedidos(QWidget):
 
     def gerar_pdf(self, row):
         from reportlab.platypus import (
-            SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, Flowable
+            SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
         )
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4
@@ -338,7 +338,6 @@ class TelaPedidos(QWidget):
 
         pedido = self.pedidos[row]
         cliente = pedido["cliente"]
-        nome_cliente = cliente.get("nome_razao") or cliente.get("nome", "")
 
         # Seleciona pasta e nome do arquivo
         pasta_inicial = self.ultima_pasta if self.ultima_pasta else ""
@@ -359,15 +358,11 @@ class TelaPedidos(QWidget):
         elementos = []
 
         # --- Logo ---
-        logo_path = """D:\Projeto_NelsonRosa\LogoALMETAIS.PNG"""  # caminho da sua logo
+        logo_path = r"D:\Projeto_NelsonRosa\LogoALMETAIS.PNG"
         if os.path.exists(logo_path):
-            img_logo = Image(logo_path, width=100, height=100,hAlign="LEFT")
-            elementos.append(img_logo)
-        elementos.append(Spacer(1, 20))
-
-        # --- Estilos para tabelas ---
-        estilo_cabecalho = ParagraphStyle(name="Cabecalho", fontSize=10, fontName='Helvetica-Bold')
-        estilo_normal = ParagraphStyle(name="Normal", fontSize=9, fontName='Helvetica')
+            img_logo = Image(logo_path, width=100, height=100)
+        else:
+            img_logo = Spacer(1, 100)
 
         # --- Dados Empresa (direita) ---
         dados_empresa = [
@@ -378,16 +373,29 @@ class TelaPedidos(QWidget):
             ["Telefone: (41) 99914-7644"],
             ["Email: Nelsonrosaperfis@yahoo.com.br"]
         ]
-        tabela_empresa = Table(dados_empresa, colWidths=[250], hAlign='RIGHT')
+        tabela_empresa = Table(dados_empresa, colWidths=[400])
         tabela_empresa.setStyle(TableStyle([
             ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
-            ('FONTSIZE', (0,0), (-1,-1), 9),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+            ('FONTSIZE', (0,0), (-1,-1), 8),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 2),
             ('BOX', (0,0), (-1,-1), 1, colors.black),
             ('BACKGROUND', (0,0), (-1,0), colors.lightgrey)
         ]))
 
-        # --- Dados Cliente (esquerda) ---
+        # --- Header: Logo + Empresa ---
+        tabela_header = Table(
+            [[img_logo, tabela_empresa]],
+            colWidths=[120, 400]
+        )
+        tabela_header.setStyle(TableStyle([
+            ('VALIGN', (0,0), (0,0), 'TOP'),
+            ('VALIGN', (1,0), (1,0), 'TOP'),
+        ]))
+
+        elementos.append(tabela_header)
+        elementos.append(Spacer(1, 20))
+
+        # --- Dados Cliente (embaixo, sozinho à esquerda) ---
         dados_cliente = [
             ["Dados do Cliente:"],
             [f"Nome: {cliente.get('nome', '')}"],
@@ -410,16 +418,10 @@ class TelaPedidos(QWidget):
             ('BACKGROUND', (0,0), (-1,0), colors.lightgrey)
         ]))
 
-        # --- Coloca Empresa e Cliente na mesma linha ---
-        from reportlab.platypus import KeepTogether
-        tabela_horizontal = Table([[tabela_cliente, tabela_empresa]], colWidths=[270, 270])
-        tabela_horizontal.setStyle(TableStyle([
-            ('VALIGN', (0,0), (-1,-1), 'TOP')
-        ]))
-        elementos.append(tabela_horizontal)
+        elementos.append(tabela_cliente)
         elementos.append(Spacer(1, 20))
 
-        # --- Título e número do pedido ---
+        # --- Título ---
         elementos.append(Paragraph(f"<b>Proposta Comercial nº {pedido['numero']}</b>", styles['Title']))
         elementos.append(Spacer(1, 10))
 
@@ -447,6 +449,7 @@ class TelaPedidos(QWidget):
         # --- Gera PDF ---
         doc.build(elementos)
         QMessageBox.information(self, "PDF Gerado", f"PDF do pedido nº {pedido['numero']} salvo com sucesso!")
+
 
 
 
