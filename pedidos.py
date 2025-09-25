@@ -385,7 +385,7 @@ class TelaPedidos(QWidget):
         # --- Header: Logo + Empresa ---
         tabela_header = Table(
             [[img_logo, tabela_empresa]],
-            colWidths=[120, 400]
+            colWidths=[120, 395]
         )
         tabela_header.setStyle(TableStyle([
             ('VALIGN', (0,0), (0,0), 'TOP'),
@@ -405,7 +405,7 @@ class TelaPedidos(QWidget):
             [f"Endereço:R.{cliente.get('rua', '')},N° {cliente.get('numero', '')} - {cliente.get('bairro', '')} - {cliente.get('cidade', '')} - {cliente.get('estado', '')}."],
             [f"IE: {cliente.get('ie', '')}"]
         ]
-        tabela_cliente = Table(dados_cliente, colWidths=[250], hAlign='LEFT')
+        tabela_cliente = Table(dados_cliente, colWidths=[519], hAlign='LEFT')
         tabela_cliente.setStyle(TableStyle([
             ('ALIGN', (0,0), (-1,-1), 'LEFT'),
             ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
