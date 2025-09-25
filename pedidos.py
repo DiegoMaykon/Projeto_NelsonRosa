@@ -356,7 +356,9 @@ class TelaPedidos(QWidget):
         doc = SimpleDocTemplate(caminho, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
         styles = getSampleStyleSheet()
         elementos = []
-
+# --- Título ---
+        elementos.append(Paragraph(f"<b>Proposta Comercial nº {pedido['numero']}</b>", styles['Title']))
+        elementos.append(Spacer(1, 10))
         # --- Logo ---
         logo_path = r"D:\Projeto_NelsonRosa\LogoALMETAIS.PNG"
         if os.path.exists(logo_path):
@@ -417,10 +419,6 @@ class TelaPedidos(QWidget):
 
         elementos.append(tabela_cliente)
         elementos.append(Spacer(1, 20))
-
-        # --- Título ---
-        elementos.append(Paragraph(f"<b>Proposta Comercial nº {pedido['numero']}</b>", styles['Title']))
-        elementos.append(Spacer(1, 10))
 
         # --- Tabela de Itens ---
 
