@@ -359,8 +359,13 @@ class TelaPedidos(QWidget):
 # --- Título ---
         elementos.append(Paragraph(f"<b>Proposta Comercial nº {pedido['numero']}</b>", styles['Title']))
         elementos.append(Spacer(1, 10))
+        data_pedido = pedido.get("data", "")
+        if data_pedido:
+            elementos.append(Paragraph(f"Data do Pedido: {data_pedido}", styles['Normal']))
+
+        elementos.append(Spacer(1, 20))
         # --- Logo ---
-        logo_path = r"D:\Projeto_NelsonRosa\LogoALMETAIS.PNG"
+        logo_path = r"D:\Projeto_NelsonRosa\logoverde.png"
         if os.path.exists(logo_path):
             img_logo = Image(logo_path, width=100, height=100)
         else:
@@ -373,7 +378,7 @@ class TelaPedidos(QWidget):
             ["IE: 1706084.2144-6"],
             ["R. Arcendino Rosa Neves 278 - Xaxim, Curitiba - PR"],
             ["Telefone: (41) 99914-7644"],
-            ["Email: Nelsonrosaperfis@yahoo.com.br"]
+            ["Email: nelsonrosaperfis@yahoo.com.br"]
         ]
         tabela_empresa = Table(dados_empresa, colWidths=[400])
         tabela_empresa.setStyle(TableStyle([
