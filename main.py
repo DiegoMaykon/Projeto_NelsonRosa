@@ -1,66 +1,86 @@
-# main.py
 import sys
+import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget
 from clientes import TelaClientes
 from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
 
+
 class TelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Sistema de Pedidos - Projeto Nelson Rosa")
-        self.setGeometry(200, 200, 400, 300)
+        self.setGeometry(200, 200, 1024, 768)
+
+        # Monta a interface
         self.inicializar_ui()
 
     def inicializar_ui(self):
+        # Cria o widget central
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        # Layout principal (centralizado verticalmente)
         layout = QVBoxLayout()
+        central_widget.setLayout(layout)
 
-        # Botão Clientes
+        # Caminho da imagem de fundo
+        caminho_fundo = r"D:\Projeto_NelsonRosa\logoverde.png"
+        if os.path.exists(caminho_fundo):
+            central_widget.setStyleSheet(f"""
+                QWidget {{
+                    border-image: url({caminho_fundo}) 0 0 0 0 stretch stretch;
+                }}
+            """)
+        else:
+            print("⚠️ Imagem de fundo não encontrada:", caminho_fundo)
+
+        # Estilo dos botões
+        estilo_botoes = """
+            QPushButton {
+                background-color: rgba(0, 0, 0, 100); 
+                color: white;
+                font-size: 16px;
+                font-weight: bold;
+                border-radius: 10px;
+                padding: 10px 20px;
+            }
+            QPushButton:hover {
+                background-color: rgba(50, 50, 50, 180);
+            }
+        """
+
+        # Botões principais
         btn_clientes = QPushButton("Clientes")
-        btn_clientes.clicked.connect(self.abrir_clientes)
-        layout.addWidget(btn_clientes)
-
-        # Botão Acessórios
         btn_acessorios = QPushButton("Acessórios")
-        btn_acessorios.clicked.connect(self.abrir_acessorios)
-        layout.addWidget(btn_acessorios)
-
-        # Botão Pedidos
         btn_pedidos = QPushButton("Pedidos")
-        btn_pedidos.clicked.connect(self.abrir_pedidos)
-        layout.addWidget(btn_pedidos)
-
-        # Botão Sair
         btn_sair = QPushButton("Sair")
+
+        # Aplica o estilo nos botões
+        for btn in [btn_clientes, btn_acessorios, btn_pedidos, btn_sair]:
+            btn.setStyleSheet(estilo_botoes)
+            layout.addWidget(btn)
+
+        # Conectar botões às telas
+        btn_clientes.clicked.connect(self.abrir_clientes)
+        btn_acessorios.clicked.connect(self.abrir_acessorios)
+        btn_pedidos.clicked.connect(self.abrir_pedidos)
         btn_sair.clicked.connect(self.close)
-        layout.addWidget(btn_sair)
 
-        # Configura container central
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
-
-    # --------------------------
-    # Ações dos botões
-    # --------------------------
+    # Métodos para abrir telas
     def abrir_clientes(self):
-        # Cria e mostra a janela de clientes
         self.tela_clientes = TelaClientes()
         self.tela_clientes.show()
 
     def abrir_acessorios(self):
-        # Cria e mostra a janela de acessórios
         self.tela_acessorios = TelaAcessorios()
         self.tela_acessorios.show()
 
     def abrir_pedidos(self):
-        # Cria e mostra a janela de pedidos
         self.tela_pedidos = TelaPedidos()
         self.tela_pedidos.show()
 
-# --------------------------
-# Execução da aplicação
-# --------------------------
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     janela = TelaPrincipal()

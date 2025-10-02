@@ -22,5 +22,17 @@
         "cidade": "curitiba",
         "estado": "parana",
         "ie": "54365363653"
+    },
+    {
+        "nome": "nelson rosa",
+        "cpf_cnpj": "07611432974",
+        "email": "",
+        "telefone": "",
+        "rua": "",
+        "numero": "",
+        "bairro": "",
+        "cidade": "",
+        "estado": "",
+        "ie": ""
     }
 ]

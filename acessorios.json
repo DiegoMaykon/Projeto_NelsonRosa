@@ -8,5 +8,10 @@
         "codigo": "su002",
         "nome": "Roldana Dupla",
         "valor": 32.0
+    },
+    {
+        "codigo": "su005",
+        "nome": "roldana mega",
+        "valor": 10.0
     }
 ]
