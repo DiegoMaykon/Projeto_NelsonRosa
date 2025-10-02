@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout,
 from clientes import TelaClientes
 from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
-
+from PyQt5.QtGui import QPalette, QBrush, QPixmap
 
 class TelaPrincipal(QMainWindow):
     def __init__(self):
@@ -25,13 +25,11 @@ class TelaPrincipal(QMainWindow):
         central_widget.setLayout(layout)
 
         # Caminho da imagem de fundo
-        caminho_fundo = r"D:\Projeto_NelsonRosa\logoverde.png"
+        caminho_fundo = r"D:\Projeto_NelsonRosa\logopreta.png"
         if os.path.exists(caminho_fundo):
-            central_widget.setStyleSheet(f"""
-                QWidget {{
-                    border-image: url({caminho_fundo}) 0 0 0 0 stretch stretch;
-                }}
-            """)
+            palette = QPalette()
+            palette.setBrush(QPalette.Window, QBrush(QPixmap(caminho_fundo)))
+            self.setPalette(palette)
         else:
             print("⚠️ Imagem de fundo não encontrada:", caminho_fundo)
 
