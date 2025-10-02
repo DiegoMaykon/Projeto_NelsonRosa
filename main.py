@@ -1,10 +1,12 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QHBoxLayout
+from PyQt5.QtGui import QPalette, QBrush, QPixmap
+from PyQt5.QtCore import Qt
 from clientes import TelaClientes
 from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
-from PyQt5.QtGui import QPalette, QBrush, QPixmap
+
 
 class TelaPrincipal(QMainWindow):
     def __init__(self):
@@ -20,9 +22,9 @@ class TelaPrincipal(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
 
-        # Layout principal (centralizado verticalmente)
-        layout = QVBoxLayout()
-        central_widget.setLayout(layout)
+        # Layout principal horizontal (2 colunas: esquerda vazia, direita botões)
+        layout_principal = QHBoxLayout()
+        central_widget.setLayout(layout_principal)
 
         # Caminho da imagem de fundo
         caminho_fundo = r"D:\Projeto_NelsonRosa\logopreta.png"
@@ -54,10 +56,25 @@ class TelaPrincipal(QMainWindow):
         btn_pedidos = QPushButton("Pedidos")
         btn_sair = QPushButton("Sair")
 
-        # Aplica o estilo nos botões
+        # Aplica estilo
         for btn in [btn_clientes, btn_acessorios, btn_pedidos, btn_sair]:
             btn.setStyleSheet(estilo_botoes)
-            layout.addWidget(btn)
+
+        # Layout de botões (coluna da direita)
+        layout_botoes = QVBoxLayout()
+        layout_botoes.addStretch()
+        layout_botoes.addWidget(btn_clientes)
+        layout_botoes.addSpacing(15)
+        layout_botoes.addWidget(btn_acessorios)
+        layout_botoes.addSpacing(15)
+        layout_botoes.addWidget(btn_pedidos)
+        layout_botoes.addSpacing(15)
+        layout_botoes.addWidget(btn_sair)
+        layout_botoes.addStretch()
+
+        # Coloca no layout principal (esquerda vazia, direita botões)
+        layout_principal.addStretch()  # parte vazia à esquerda
+        layout_principal.addLayout(layout_botoes)  # botões na direita
 
         # Conectar botões às telas
         btn_clientes.clicked.connect(self.abrir_clientes)
