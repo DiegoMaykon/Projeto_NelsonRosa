@@ -21,7 +21,7 @@ MAX_BACKUPS = 1
 class TelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Sistema de Pedidos - Projeto Nelson Rosa")
+        self.setWindowTitle("Sistema de Pedidos AL Metais - Nelson Rosa")
         self.setGeometry(200, 200, 1024, 768)
         self.inicializar_ui()
         self.inicializar_backup_automatico()  # Ativa backup automático diário
