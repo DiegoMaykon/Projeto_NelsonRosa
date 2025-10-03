@@ -16,8 +16,8 @@
         "itens": [
             {
                 "nome": "Roldana Simples",
-                "quantidade": 1,
-                "subtotal": 5.0
+                "quantidade": 4,
+                "subtotal": 20.0
             },
             {
                 "nome": "Roldana Simples",
@@ -26,8 +26,8 @@
             },
             {
                 "nome": "Roldana Simples",
-                "quantidade": 1,
-                "subtotal": 5.0
+                "quantidade": 2,
+                "subtotal": 10.0
             },
             {
                 "nome": "Roldana Simples",
@@ -41,6 +41,6 @@
             }
         ],
         "data": "02/10/2025",
-        "total": 25.0
+        "total": 45.0
     }
 ]

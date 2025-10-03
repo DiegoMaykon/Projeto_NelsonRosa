@@ -29,6 +29,8 @@ def salvar_json(dados, arquivo):
 # --------------------------
 # Tela de Pedidos
 # --------------------------
+# ... mantenha todos os imports e funções utilitárias (carregar_json, salvar_json) ...
+
 class TelaPedidos(QWidget):
     def __init__(self):
         super().__init__()
@@ -49,8 +51,195 @@ class TelaPedidos(QWidget):
         self.abas = QTabWidget()
         self.abas.addTab(self.aba_novo_pedido(), "Novo Pedido")
         self.abas.addTab(self.aba_pedidos_finalizados(), "Pedidos Finalizados")
+        self.abas.addTab(self.aba_pesquisar_pedidos(), "Pesquisar Pedidos")  # Nova aba
         layout.addWidget(self.abas)
         self.setLayout(layout)
+
+    # --------------------------
+    # Nova Aba: Pesquisar Pedidos
+    # --------------------------
+    def aba_pesquisar_pedidos(self):
+        widget = QWidget()
+        layout = QVBoxLayout()
+
+        hbox_busca = QHBoxLayout()
+        hbox_busca.addWidget(QLabel("Pesquisar Cliente:"))
+
+        self.input_pesquisa = QLineEdit()
+        nomes_clientes = [c.get("nome_razao", c.get("nome", "")) for c in self.clientes]
+        completer_clientes = QCompleter(nomes_clientes)
+        completer_clientes.setCaseSensitivity(Qt.CaseInsensitive)
+        self.input_pesquisa.setCompleter(completer_clientes)
+        hbox_busca.addWidget(self.input_pesquisa)
+
+        btn_buscar = QPushButton("Buscar")
+        btn_buscar.clicked.connect(self.filtrar_pedidos)
+        hbox_busca.addWidget(btn_buscar)
+
+        layout.addLayout(hbox_busca)
+
+        # Tabela de pedidos filtrados
+        self.tabela_filtrada = QTableWidget()
+        self.tabela_filtrada.setColumnCount(5)
+        self.tabela_filtrada.setHorizontalHeaderLabels(["Número", "Cliente", "Data", "Total", "PDF"])
+        self.tabela_filtrada.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.tabela_filtrada.setSelectionBehavior(QTableWidget.SelectRows)
+        self.tabela_filtrada.setSelectionMode(QTableWidget.SingleSelection)
+        layout.addWidget(self.tabela_filtrada)
+
+        widget.setLayout(layout)
+        return widget
+
+    def filtrar_pedidos(self):
+        texto = self.input_pesquisa.text().strip().lower()
+        resultados = [
+            p for p in self.pedidos
+            if (p["cliente"].get("nome_razao") or p["cliente"].get("nome", "")).lower().find(texto) != -1
+        ]
+
+        self.tabela_filtrada.setRowCount(len(resultados))
+        for row, pedido in enumerate(resultados):
+            self.tabela_filtrada.setItem(row, 0, QTableWidgetItem(str(pedido["numero"])))
+            cliente_nome = pedido["cliente"].get("nome_razao") or pedido["cliente"].get("nome", "Sem Nome")
+            self.tabela_filtrada.setItem(row, 1, QTableWidgetItem(cliente_nome))
+            self.tabela_filtrada.setItem(row, 2, QTableWidgetItem(pedido.get("data", "")))
+            self.tabela_filtrada.setItem(row, 3, QTableWidgetItem(f"R$ {pedido.get('total', 0):.2f}"))
+
+            # Botão PDF
+            btn_pdf = QPushButton("Baixar PDF")
+            btn_pdf.clicked.connect(lambda checked, p=pedido: self.gerar_pdf_pedido(p))
+            self.tabela_filtrada.setCellWidget(row, 4, btn_pdf)
+
+    # Método para gerar PDF a partir de um pedido específico (usando mesma lógica de gerar_pdf)
+    def gerar_pdf_pedido(self, pedido):
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib import colors
+        from reportlab.lib.styles import getSampleStyleSheet
+        import os
+        
+        cliente = pedido["cliente"]
+        pasta_inicial = self.ultima_pasta if self.ultima_pasta else ""
+        caminho, _ = QFileDialog.getSaveFileName(
+            self,
+            "Salvar PDF",
+            os.path.join(pasta_inicial, f"pedido_{pedido['numero']}.pdf"),
+            "PDF Files (*.pdf)"
+        )
+        if not caminho:
+            return
+
+        self.ultima_pasta = os.path.dirname(caminho)
+
+        # Configuração do PDF
+        doc = SimpleDocTemplate(caminho, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+        styles = getSampleStyleSheet()
+        elementos = []
+# --- Título ---
+        elementos.append(Paragraph(f"<b>Proposta Comercial nº {pedido['numero']}</b>", styles['Title']))
+        elementos.append(Spacer(1, 10))
+        data_pedido = pedido.get("data", "")
+        if data_pedido:
+            elementos.append(Paragraph(f"Data do Pedido: {data_pedido}", styles['Normal']))
+
+        elementos.append(Spacer(1, 20))
+        # --- Logo ---
+        logo_path = r"D:\Projeto_NelsonRosa\logoverde.png"
+        if os.path.exists(logo_path):
+            img_logo = Image(logo_path, width=100, height=100)
+        else:
+            img_logo = Spacer(1, 100)
+
+        # --- Dados Empresa (direita) ---
+        dados_empresa = [
+            ["Iorli de Fatima Marcondes Rosa Representações"],
+            ["CNPJ: 34.308.499/0001-10"],
+            ["IE: 1706084.2144-6"],
+            ["R. Arcendino Rosa Neves 278 - Xaxim, Curitiba - PR"],
+            ["Telefone: (41) 99914-7644"],
+            ["Email: nelsonrosaperfis@yahoo.com.br"]
+        ]
+        tabela_empresa = Table(dados_empresa, colWidths=[400])
+        tabela_empresa.setStyle(TableStyle([
+            ('ALIGN', (0,0), (-1,-1), 'RIGHT'),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 1.7),
+            ('BOX', (0,0), (-1,-1), 1, colors.black),
+            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey)
+        ]))
+
+        # --- Header: Logo + Empresa ---
+        tabela_header = Table(
+            [[img_logo, tabela_empresa]],
+            colWidths=[120, 395]
+        )
+        tabela_header.setStyle(TableStyle([
+            ('VALIGN', (0,0), (0,0), 'TOP'),
+            ('VALIGN', (1,0), (1,0), 'TOP'),
+        ]))
+
+        elementos.append(tabela_header)
+        elementos.append(Spacer(1, 20))
+
+        # --- Dados Cliente (embaixo, sozinho à esquerda) ---
+        dados_cliente = [
+            ["Dados do Cliente:"],
+            [f"Nome: {cliente.get('nome', '')}"],
+            [f"CPF/CNPJ: {cliente.get('cpf_cnpj', '')}"],
+            [f"Email: {cliente.get('email', '')}"],
+            [f"Telefone: {cliente.get('telefone', '')}"],
+            [f"Endereço:R.{cliente.get('rua', '')},N° {cliente.get('numero', '')} - {cliente.get('bairro', '')} - {cliente.get('cidade', '')} - {cliente.get('estado', '')}."],
+            [f"IE: {cliente.get('ie', '')}"]
+        ]
+        tabela_cliente = Table(dados_cliente, colWidths=[519], hAlign='LEFT')
+        tabela_cliente.setStyle(TableStyle([
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 3),
+            ('BOX', (0,0), (-1,-1), 1, colors.black),
+            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey)
+        ]))
+
+        elementos.append(tabela_cliente)
+        elementos.append(Spacer(1, 20))
+
+        # --- Tabela de Itens ---
+
+# Carrega o JSON de acessórios
+        with open(r"D:\Projeto_NelsonRosa\acessorios.json", "r", encoding="utf-8") as f:
+            lista_acessorios = json.load(f)
+
+        dados_itens = [["Código", "Acessório", "Qtd", "Subtotal (R$)"]]
+        for item in pedido["itens"]:
+            # Busca o código correspondente pelo nome
+            codigo = next((a["codigo"] for a in lista_acessorios if a["nome"] == item["nome"]), "")
+            dados_itens.append([
+                codigo,
+                item['nome'],
+                str(item['quantidade']),
+                f"{item['subtotal']:.2f}"
+            ])
+
+        tabela_itens = Table(dados_itens, colWidths=[70, 270, 50, 130],hAlign="LEFT")
+        tabela_itens.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+            ('GRID', (0,0), (-1,-1), 1, colors.black),
+            ('ALIGN', (2,1), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 9),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+            ('TOPPADDING', (0,0), (-1,-1), 4),
+        ]))
+        elementos.append(tabela_itens)
+        elementos.append(Spacer(1, 15))
+
+
+
+
+        # --- Total ---
+        elementos.append(Paragraph(f"<b>Total: R$ {pedido.get('total', 0):.2f}</b>", styles['Heading2']))
+
 
     # --------------------------
     # Aba Novo Pedido
