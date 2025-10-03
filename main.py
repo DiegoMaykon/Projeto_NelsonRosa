@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QFileDialog, QMessageBox
 )
 from PyQt5.QtGui import QPalette, QBrush, QPixmap
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from clientes import TelaClientes
 from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
@@ -15,12 +15,16 @@ from pedidos import TelaPedidos
 # Arquivos principais do sistema
 ARQUIVOS_SISTEMA = ["clientes.json", "acessorios.json", "pedidos.json"]
 
+# Número máximo de backups a manter
+MAX_BACKUPS = 1
+
 class TelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Sistema de Pedidos - Projeto Nelson Rosa")
         self.setGeometry(200, 200, 1024, 768)
         self.inicializar_ui()
+        self.inicializar_backup_automatico()  # Ativa backup automático diário
 
     def inicializar_ui(self):
         central_widget = QWidget()
@@ -103,25 +107,18 @@ class TelaPrincipal(QMainWindow):
         self.tela_pedidos.show()
 
     # ----------------------------
-    # Função de Backup
+    # Backup manual
     # ----------------------------
     def fazer_backup(self):
         pasta_backup = QFileDialog.getExistingDirectory(self, "Selecionar Pasta de Backup")
         if not pasta_backup:
             return
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        pasta_destino = os.path.join(pasta_backup, f"backup_{timestamp}")
-        os.makedirs(pasta_destino, exist_ok=True)
-
-        for arquivo in ARQUIVOS_SISTEMA:
-            if os.path.exists(arquivo):
-                shutil.copy2(arquivo, pasta_destino)
-
-        QMessageBox.information(self, "Backup Concluído", f"Backup realizado com sucesso em:\n{pasta_destino}")
+        self.realizar_backup(pasta_backup)
+        QMessageBox.information(self, "Backup Concluído", f"Backup realizado com sucesso em:\n{pasta_backup}")
 
     # ----------------------------
-    # Função de Restauração
+    # Restauração manual
     # ----------------------------
     def restaurar_backup(self):
         pasta_backup = QFileDialog.getExistingDirectory(self, "Selecionar Pasta do Backup")
@@ -143,6 +140,56 @@ class TelaPrincipal(QMainWindow):
                 shutil.copy2(arquivo_backup, arquivo)
 
         QMessageBox.information(self, "Restauração Concluída", "Backup restaurado com sucesso!\nReinicie o sistema para atualizar as telas.")
+
+    # ----------------------------
+    # Backup automático diário
+    # ----------------------------
+    def inicializar_backup_automatico(self):
+        self.pasta_backup_automatica = os.path.join(os.getcwd(), "backups")
+        os.makedirs(self.pasta_backup_automatica, exist_ok=True)
+
+        # Realiza backup automático imediatamente
+        self.backup_automatico()
+
+        # Agenda backup diário
+        self.timer_backup = QTimer()
+        self.timer_backup.timeout.connect(self.backup_automatico)
+        self.timer_backup.start(24 * 60 * 60 * 1000)  # 24h em milissegundos
+
+    def backup_automatico(self):
+        self.realizar_backup(self.pasta_backup_automatica, mostrar_msg=False)
+        self.limpar_backups_antigos(self.pasta_backup_automatica)
+        print(f"Backup automático realizado em: {self.pasta_backup_automatica}")
+
+    # ----------------------------
+    # Função central de backup
+    # ----------------------------
+    def realizar_backup(self, pasta_backup, mostrar_msg=True):
+        os.makedirs(pasta_backup, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        pasta_destino = os.path.join(pasta_backup, f"backup_{timestamp}")
+        os.makedirs(pasta_destino, exist_ok=True)
+
+        for arquivo in ARQUIVOS_SISTEMA:
+            if os.path.exists(arquivo):
+                shutil.copy2(arquivo, pasta_destino)
+
+        if mostrar_msg:
+            print(f"Backup realizado em: {pasta_destino}")
+
+    # ----------------------------
+    # Limpeza de backups antigos
+    # ----------------------------
+    def limpar_backups_antigos(self, pasta_backup):
+        if not os.path.exists(pasta_backup):
+            return
+        backups = [d for d in os.listdir(pasta_backup) if os.path.isdir(os.path.join(pasta_backup, d))]
+        backups.sort()  # Ordena do mais antigo para o mais recente
+        while len(backups) > MAX_BACKUPS:
+            antigo = backups.pop(0)
+            caminho_antigo = os.path.join(pasta_backup, antigo)
+            shutil.rmtree(caminho_antigo)
+            print(f"Backup antigo removido: {caminho_antigo}")
 
 # ----------------------------
 # Execução do sistema

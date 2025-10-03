@@ -1,0 +1,38 @@
+[
+    {
+        "nome": "Diego Maykon Zgoda",
+        "cpf_cnpj": "07611432974",
+        "email": "Diegomaykon882@gmail.com",
+        "telefone": "(41)98798-4927",
+        "rua": "Bacupari",
+        "numero": "244",
+        "bairro": "Uberaba",
+        "cidade": "Curitiba",
+        "estado": "Pr",
+        "ie": "Isento"
+    },
+    {
+        "nome": "Perfectlisa Pintura",
+        "cpf_cnpj": "98234345/0001-23",
+        "email": "perfilisia.regina@yahoo.com.br",
+        "telefone": "419945-9876",
+        "rua": "ghfgjfjfjj",
+        "numero": "22",
+        "bairro": "tjgfjfgjfj",
+        "cidade": "curitiba",
+        "estado": "parana",
+        "ie": "54365363653"
+    },
+    {
+        "nome": "erica",
+        "cpf_cnpj": "07611432974",
+        "email": "",
+        "telefone": "",
+        "rua": "",
+        "numero": "",
+        "bairro": "",
+        "cidade": "",
+        "estado": "",
+        "ie": ""
+    }
+]
