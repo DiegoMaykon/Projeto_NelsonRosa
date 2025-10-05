@@ -23,7 +23,7 @@ def salvar_acessorios(acessorios):
 class TelaAcessorios(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Cadastro de Acessórios")
+        self.setWindowTitle("Cadastro de Itens")
         self.setGeometry(250, 250, 700, 500)
 
         self.acessorios = carregar_acessorios()
@@ -33,8 +33,8 @@ class TelaAcessorios(QWidget):
         self.aba_cadastro = QWidget()
         self.aba_edicao = QWidget()
 
-        self.abas.addTab(self.aba_listagem, "Acessórios Cadastrados")
-        self.abas.addTab(self.aba_cadastro, "Novo Acessório")
+        self.abas.addTab(self.aba_listagem, "Itens Cadastrados")
+        self.abas.addTab(self.aba_cadastro, "Cadastrar Novo Item")
 
         layout_principal = QVBoxLayout()
         layout_principal.addWidget(self.abas)
@@ -63,11 +63,11 @@ class TelaAcessorios(QWidget):
 
         layout.addWidget(self.tabela)
 
-        btn_editar = QPushButton("Editar Selecionado")
+        btn_editar = QPushButton("Editar Item Selecionado")
         btn_editar.clicked.connect(self.editar_acessorio)
         layout.addWidget(btn_editar)
 
-        btn_excluir = QPushButton("Excluir Selecionado")
+        btn_excluir = QPushButton("Excluir Item Selecionado")
         btn_excluir.clicked.connect(self.excluir_acessorio)
         layout.addWidget(btn_excluir)
 
@@ -93,7 +93,7 @@ class TelaAcessorios(QWidget):
         layout.addWidget(self.input_codigo)
 
         self.input_nome = QLineEdit()
-        self.input_nome.setPlaceholderText("Nome do acessório")
+        self.input_nome.setPlaceholderText("Nome do Item")
         layout.addWidget(QLabel("Nome:"))
         layout.addWidget(self.input_nome)
 
@@ -102,7 +102,7 @@ class TelaAcessorios(QWidget):
         layout.addWidget(QLabel("Valor (R$):"))
         layout.addWidget(self.input_valor)
 
-        btn_salvar = QPushButton("Salvar Acessório")
+        btn_salvar = QPushButton("Salvar Item")
         btn_salvar.clicked.connect(self.salvar_novo_acessorio)
         layout.addWidget(btn_salvar)
 
@@ -126,7 +126,7 @@ class TelaAcessorios(QWidget):
         novo_acessorio = {"codigo": codigo, "nome": nome, "valor": valor}
         self.acessorios.append(novo_acessorio)
         salvar_acessorios(self.acessorios)
-        QMessageBox.information(self, "Sucesso", "Acessório cadastrado com sucesso!")
+        QMessageBox.information(self, "Sucesso", "Item cadastrado com sucesso!")
 
         self.input_codigo.clear()
         self.input_nome.clear()
@@ -162,7 +162,7 @@ class TelaAcessorios(QWidget):
     def editar_acessorio(self):
         row = self.tabela.currentRow()
         if row < 0:
-            QMessageBox.warning(self, "Erro", "Selecione um acessório para editar!")
+            QMessageBox.warning(self, "Erro", "Selecione um Item para editar!")
             return
 
         acessorio = self.acessorios[row]
@@ -171,7 +171,7 @@ class TelaAcessorios(QWidget):
         self.edit_valor.setText(str(acessorio["valor"]))
 
         self.acessorio_em_edicao = row
-        self.abas.addTab(self.aba_edicao, "Editar Acessório")
+        self.abas.addTab(self.aba_edicao, "Editar Item")
         self.abas.setCurrentWidget(self.aba_edicao)
 
     def salvar_edicao(self):
@@ -196,7 +196,7 @@ class TelaAcessorios(QWidget):
         }
 
         salvar_acessorios(self.acessorios)
-        QMessageBox.information(self, "Sucesso", "Acessório atualizado com sucesso!")
+        QMessageBox.information(self, "Sucesso", "Item atualizado com sucesso!")
 
         self.atualizar_tabela()
         self.abas.removeTab(self.abas.indexOf(self.aba_edicao))
@@ -205,16 +205,16 @@ class TelaAcessorios(QWidget):
     def excluir_acessorio(self):
         row = self.tabela.currentRow()
         if row < 0:
-            QMessageBox.warning(self, "Erro", "Selecione um acessório para excluir!")
+            QMessageBox.warning(self, "Erro", "Selecione um Item para excluir!")
             return
 
         confirm = QMessageBox.question(
             self, "Confirmar Exclusão",
-            "Tem certeza que deseja excluir este acessório?",
+            "Tem certeza que deseja excluir este Item?",
             QMessageBox.Yes | QMessageBox.No
         )
         if confirm == QMessageBox.Yes:
             self.acessorios.pop(row)
             salvar_acessorios(self.acessorios)
             self.atualizar_tabela()
-            QMessageBox.information(self, "Sucesso", "Acessório excluído com sucesso!")
+            QMessageBox.information(self, "Sucesso", "Item excluído com sucesso!")

@@ -3,7 +3,7 @@ import os
 import shutil
 from datetime import datetime
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,
+    QApplication, QMainWindow, QPushButton, QVBoxLayout, QDesktopWidget, QWidget,
     QHBoxLayout, QFileDialog, QMessageBox
 )
 from PyQt5.QtGui import QPalette, QBrush, QPixmap
@@ -22,10 +22,23 @@ class TelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Sistema de Pedidos AL Metais - Nelson Rosa")
-        self.setGeometry(200, 200, 1024, 768)
         self.inicializar_ui()
         self.inicializar_backup_automatico()  # Ativa backup automático diário
+        self.ajustar_resolucao()
+        
+    def ajustar_resolucao(self):
+        """Ajusta a janela conforme a resolução da tela e inicia em modo tela cheia"""
+        tela = QDesktopWidget().screenGeometry()
+        largura = tela.width()
+        altura = tela.height()
+        self.setGeometry(0, 0, largura, altura)
+        self.showFullScreen()
+        
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.showNormal()
 
+        
     def inicializar_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -58,7 +71,7 @@ class TelaPrincipal(QMainWindow):
 
         # Botões principais
         btn_clientes = QPushButton("Clientes")
-        btn_acessorios = QPushButton("Acessórios")
+        btn_acessorios = QPushButton("Itens")
         btn_pedidos = QPushButton("Pedidos")
         btn_backup = QPushButton("Backup")
         btn_restaurar = QPushButton("Restaurar Backup")
