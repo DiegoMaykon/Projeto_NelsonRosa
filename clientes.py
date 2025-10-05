@@ -2,7 +2,7 @@ import json
 import os
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QTableWidget, QTableWidgetItem, QMessageBox, QHeaderView
+    QPushButton, QTableWidget, QTableWidgetItem, QMessageBox, QHeaderView,QDesktopWidget
 )
 
 ARQUIVO_CLIENTES = "clientes.json"
@@ -11,13 +11,22 @@ class TelaClientes(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Cadastro de Clientes")
-        self.setGeometry(250, 250, 1050, 500)
-
+        self.ajustar_resolucao()  # Ajusta a tela à resolução do computador
         self.clientes = self.carregar_clientes()
         self.inicializar_ui()
 
+    def ajustar_resolucao(self):
+        """Ajusta a janela para ocupar 80% da tela, centralizada"""
+        tela = QDesktopWidget().screenGeometry()
+        largura = int(tela.width() * 0.8)
+        altura = int(tela.height() * 0.8)
+        pos_x = int((tela.width() - largura) / 2)
+        pos_y = int((tela.height() - altura) / 2)
+        self.setGeometry(pos_x, pos_y, largura, altura)
+
     def inicializar_ui(self):
         layout = QVBoxLayout()
+        self.setLayout(layout)
 
         # Botões principais
         btn_layout = QHBoxLayout()
@@ -136,12 +145,30 @@ class JanelaEdicaoCliente(QWidget):
         self.parent = parent
         self.linha = linha
         self.setWindowTitle("Editar Cliente" if cliente else "Adicionar Cliente")
-        self.setGeometry(300, 300, 700, 400)
+
+        self.ajustar_resolucao()  # Ajusta a janela proporcionalmente à tela
 
         self.inicializar_ui(cliente)
 
+    def ajustar_resolucao(self):
+        """Ajusta a janela proporcionalmente à resolução da tela e centraliza"""
+        tela = QDesktopWidget().screenGeometry()
+        largura_tela = tela.width()
+        altura_tela = tela.height()
+
+        # Define tamanho como 40% da largura e 30% da altura da tela (por exemplo)
+        largura_janela = int(largura_tela * 0.4)
+        altura_janela = int(altura_tela * 0.3)
+
+        # Centraliza a janela
+        x = int((largura_tela - largura_janela) / 2)
+        y = int((altura_tela - altura_janela) / 2)
+
+        self.setGeometry(x, y, largura_janela, altura_janela)
+
     def inicializar_ui(self, cliente=None):
         layout = QVBoxLayout()
+        self.setLayout(layout)
 
         # Linha 1: Nome, CPF/CNPJ, Email
         form_layout1 = QHBoxLayout()

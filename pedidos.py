@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QTableWidget, QTableWidgetItem, QMessageBox,
     QTabWidget, QCompleter, QComboBox, QSpinBox, QAbstractItemView,
-    QFileDialog
+    QFileDialog,QDesktopWidget
 )
 from PyQt5.QtCore import Qt, QDate
 from reportlab.pdfgen import canvas
@@ -36,7 +36,7 @@ class TelaPedidos(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Gerenciamento de Pedidos")
-        self.setGeometry(250, 250, 900, 500)
+        self.ajustar_resolucao()  # Ajusta a janela para ocupar 80% da tela, centralizada
 
         self.pedidos = carregar_json(ARQUIVO_PEDIDOS)
         self.clientes = carregar_json(ARQUIVO_CLIENTES)
@@ -46,6 +46,15 @@ class TelaPedidos(QWidget):
         self.ultima_pasta = ""  # Guarda a última pasta usada para salvar PDFs
 
         self.inicializar_ui()
+
+    def ajustar_resolucao(self):
+        """Ajusta a janela para ocupar 80% da tela, centralizada"""
+        tela = QDesktopWidget().screenGeometry()
+        largura = int(tela.width() * 0.8)
+        altura = int(tela.height() * 0.8)
+        pos_x = int((tela.width() - largura) / 2)
+        pos_y = int((tela.height() - altura) / 2)
+        self.setGeometry(pos_x, pos_y, largura, altura)
 
     def inicializar_ui(self):
         layout = QVBoxLayout()

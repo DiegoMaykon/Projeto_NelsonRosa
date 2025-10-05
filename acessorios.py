@@ -2,7 +2,7 @@ import json
 import os
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton,
-    QTableWidget, QTableWidgetItem, QMessageBox, QTabWidget
+    QTableWidget, QTableWidgetItem, QMessageBox, QTabWidget,QDesktopWidget
 )
 
 ARQUIVO_ACESSORIOS = "acessorios.json"
@@ -24,7 +24,8 @@ class TelaAcessorios(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Cadastro de Itens")
-        self.setGeometry(250, 250, 700, 500)
+
+        self.definir_resolucao()
 
         self.acessorios = carregar_acessorios()
 
@@ -43,6 +44,15 @@ class TelaAcessorios(QWidget):
         self.inicializar_aba_listagem()
         self.inicializar_aba_cadastro()
         self.inicializar_aba_edicao()
+
+    def definir_resolucao(self):
+        """Define a janela em proporção da tela, como na JanelaEdicaoCliente"""
+        tela = QDesktopWidget().screenGeometry()
+        largura = int(tela.width() * 0.8)   # 80% da largura da tela
+        altura = int(tela.height() * 0.8)   # 80% da altura da tela
+        pos_x = int((tela.width() - largura) / 2)
+        pos_y = int((tela.height() - altura) / 2)
+        self.setGeometry(pos_x, pos_y, largura, altura)
 
     # -----------------------------
     # Aba de listagem
