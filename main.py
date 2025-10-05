@@ -12,6 +12,7 @@ from clientes import TelaClientes
 from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
 
+
 # Arquivos principais do sistema
 ARQUIVOS_SISTEMA = ["clientes.json", "acessorios.json", "pedidos.json"]
 
@@ -22,7 +23,7 @@ MAX_BACKUPS = 1
 class TelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Sistema de Pedidos AL Metais - Nelson Rosa")
+        self.setWindowTitle("Sistema de Pedidos AL Metais - Nelson Rosa - V1.0")
         # Caminho da imagem no mesmo diretório do script/executável
         diretorio_atual = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.caminho_fundo = os.path.join(diretorio_atual, "logopreta2.png")
