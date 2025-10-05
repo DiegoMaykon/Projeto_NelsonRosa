@@ -23,7 +23,9 @@ class TelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Sistema de Pedidos AL Metais - Nelson Rosa")
-        self.caminho_fundo = r"D:\Projeto_NelsonRosa\logopreta2.png"
+        # Caminho da imagem no mesmo diretório do script/executável
+        diretorio_atual = os.path.dirname(os.path.abspath(sys.argv[0]))
+        self.caminho_fundo = os.path.join(diretorio_atual, "logopreta2.png")
         self.inicializar_ui()
         self.inicializar_backup_automatico()  # Ativa backup automático diário
         self.ajustar_resolucao()
@@ -34,7 +36,6 @@ class TelaPrincipal(QMainWindow):
         largura = tela.width()
         altura = tela.height()
         self.setGeometry(0, 0, largura, altura)
-        self.showFullScreen()
 
     def inicializar_ui(self):
         central_widget = QWidget()

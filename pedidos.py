@@ -1,4 +1,5 @@
 import json
+import sys
 import os
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -144,7 +145,8 @@ class TelaPedidos(QWidget):
 
         elementos.append(Spacer(1, 20))
         # --- Logo ---
-        logo_path = r"D:\Projeto_NelsonRosa\logoverde.png"
+        diretorio_atual = os.path.dirname(os.path.abspath(sys.argv[0]))
+        logo_path = os.path.join(diretorio_atual, "logoverde.png")
         if os.path.exists(logo_path):
             img_logo = Image(logo_path, width=100, height=100)
         else:
@@ -210,7 +212,7 @@ class TelaPedidos(QWidget):
         with open(r"D:\Projeto_NelsonRosa\acessorios.json", "r", encoding="utf-8") as f:
             lista_acessorios = json.load(f)
 
-        dados_itens = [["Código", "Acessório", "Qtd", "Subtotal (R$)"]]
+        dados_itens = [["Código", "Item", "Qtd", "Subtotal (R$)"]]
         for item in pedido["itens"]:
             # Busca o código correspondente pelo nome
             codigo = next((a["codigo"] for a in lista_acessorios if a["nome"] == item["nome"]), "")
@@ -620,7 +622,7 @@ class TelaPedidos(QWidget):
         with open(r"D:\Projeto_NelsonRosa\acessorios.json", "r", encoding="utf-8") as f:
             lista_acessorios = json.load(f)
 
-        dados_itens = [["Código", "Acessório", "Qtd", "Subtotal (R$)"]]
+        dados_itens = [["Código", "Item", "Qtd", "Subtotal (R$)"]]
         for item in pedido["itens"]:
             # Busca o código correspondente pelo nome
             codigo = next((a["codigo"] for a in lista_acessorios if a["nome"] == item["nome"]), "")
