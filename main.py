@@ -1,6 +1,7 @@
 import sys
 import os
 import shutil
+import json
 from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QVBoxLayout, QDesktopWidget, QWidget,
@@ -13,24 +14,43 @@ from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
 
 
-# Arquivos principais do sistema
-ARQUIVOS_SISTEMA = ["clientes.json", "acessorios.json", "pedidos.json"]
+# ==============================
+# 🔹 Diretório fixo de dados do sistema
+# ==============================
+PASTA_DADOS = os.path.join(os.getenv("APPDATA"), "SistemaGestao")
+os.makedirs(PASTA_DADOS, exist_ok=True)
+
+# Caminhos completos dos arquivos JSON
+ARQUIVO_CLIENTES = os.path.join(PASTA_DADOS, "clientes.json")
+ARQUIVO_ACESSORIOS = os.path.join(PASTA_DADOS, "acessorios.json")
+ARQUIVO_PEDIDOS = os.path.join(PASTA_DADOS, "pedidos.json")
+
+# Lista principal usada para backup
+ARQUIVOS_SISTEMA = [ARQUIVO_CLIENTES, ARQUIVO_ACESSORIOS, ARQUIVO_PEDIDOS]
 
 # Número máximo de backups a manter
 MAX_BACKUPS = 1
 
 
+# ==============================
+# 🔹 Classe Principal
+# ==============================
 class TelaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Sistema de Pedidos AL Metais - Nelson Rosa - V1.0")
+
         # Caminho da imagem no mesmo diretório do script/executável
         diretorio_atual = os.path.dirname(os.path.abspath(sys.argv[0]))
         self.caminho_fundo = os.path.join(diretorio_atual, "logopreta2.png")
+
         self.inicializar_ui()
         self.inicializar_backup_automatico()  # Ativa backup automático diário
         self.ajustar_resolucao()
 
+    # ==============================
+    # Ajuste de resolução
+    # ==============================
     def ajustar_resolucao(self):
         """Ajusta a janela conforme a resolução da tela e inicia em modo tela cheia"""
         tela = QDesktopWidget().screenGeometry()
@@ -38,6 +58,9 @@ class TelaPrincipal(QMainWindow):
         altura = tela.height()
         self.setGeometry(0, 0, largura, altura)
 
+    # ==============================
+    # Interface
+    # ==============================
     def inicializar_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -108,7 +131,9 @@ class TelaPrincipal(QMainWindow):
         btn_restaurar.clicked.connect(self.restaurar_backup)
         btn_sair.clicked.connect(self.close)
 
-    # ===== Atualiza fundo ao redimensionar =====
+    # ==============================
+    # Fundo dinâmico
+    # ==============================
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.atualizar_fundo()
@@ -118,13 +143,15 @@ class TelaPrincipal(QMainWindow):
         if hasattr(self, "pixmap_original"):
             scaled_pixmap = self.pixmap_original.scaled(
                 self.size(),
-                Qt.IgnoreAspectRatio,  # Preenche totalmente, sem manter proporção
+                Qt.IgnoreAspectRatio,
                 Qt.SmoothTransformation
             )
             self.label_fundo.setPixmap(scaled_pixmap)
             self.label_fundo.resize(self.size())
 
-    # ===== Telas =====
+    # ==============================
+    # Telas
+    # ==============================
     def abrir_clientes(self):
         self.tela_clientes = TelaClientes()
         self.tela_clientes.show()
@@ -137,7 +164,9 @@ class TelaPrincipal(QMainWindow):
         self.tela_pedidos = TelaPedidos()
         self.tela_pedidos.show()
 
-    # ===== Backup manual =====
+    # ==============================
+    # Backup manual
+    # ==============================
     def fazer_backup(self):
         pasta_backup = QFileDialog.getExistingDirectory(self, "Selecionar Pasta de Backup")
         if not pasta_backup:
@@ -145,7 +174,9 @@ class TelaPrincipal(QMainWindow):
         self.realizar_backup(pasta_backup)
         QMessageBox.information(self, "Backup Concluído", f"Backup realizado com sucesso em:\n{pasta_backup}")
 
-    # ===== Restauração manual =====
+    # ==============================
+    # Restauração manual
+    # ==============================
     def restaurar_backup(self):
         pasta_backup = QFileDialog.getExistingDirectory(self, "Selecionar Pasta do Backup")
         if not pasta_backup:
@@ -159,26 +190,31 @@ class TelaPrincipal(QMainWindow):
         if confirm != QMessageBox.Yes:
             return
         for arquivo in ARQUIVOS_SISTEMA:
-            arquivo_backup = os.path.join(pasta_backup, arquivo)
+            nome = os.path.basename(arquivo)
+            arquivo_backup = os.path.join(pasta_backup, nome)
             if os.path.exists(arquivo_backup):
                 shutil.copy2(arquivo_backup, arquivo)
         QMessageBox.information(self, "Restauração Concluída", "Backup restaurado com sucesso!\nReinicie o sistema para atualizar as telas.")
 
-    # ===== Backup automático =====
+    # ==============================
+    # Backup automático diário
+    # ==============================
     def inicializar_backup_automatico(self):
-        self.pasta_backup_automatica = os.path.join(os.getcwd(), "backups")
+        self.pasta_backup_automatica = os.path.join(PASTA_DADOS, "backups")
         os.makedirs(self.pasta_backup_automatica, exist_ok=True)
         self.backup_automatico()
         self.timer_backup = QTimer()
         self.timer_backup.timeout.connect(self.backup_automatico)
-        self.timer_backup.start(24 * 60 * 60 * 1000)
+        self.timer_backup.start(24 * 60 * 60 * 1000)  # 1 dia
 
     def backup_automatico(self):
         self.realizar_backup(self.pasta_backup_automatica, mostrar_msg=False)
         self.limpar_backups_antigos(self.pasta_backup_automatica)
         print(f"Backup automático realizado em: {self.pasta_backup_automatica}")
 
-    # ===== Funções de backup =====
+    # ==============================
+    # Funções de backup
+    # ==============================
     def realizar_backup(self, pasta_backup, mostrar_msg=True):
         os.makedirs(pasta_backup, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -202,7 +238,9 @@ class TelaPrincipal(QMainWindow):
             print(f"Backup antigo removido: {caminho_antigo}")
 
 
-# ===== Execução =====
+# ==============================
+# Execução
+# ==============================
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     janela = TelaPrincipal()
