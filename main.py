@@ -14,11 +14,17 @@ from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
 
 
-# ==============================
-# 🔹 Diretório fixo de dados do sistema
-# ==============================
-PASTA_DADOS = os.path.join(os.getenv("APPDATA"), "SistemaGestao")
-os.makedirs(PASTA_DADOS, exist_ok=True)
+def criar_pasta_dados():
+    """Cria a pasta 'dados' na mesma pasta do main.py ou do .exe"""
+    if getattr(sys, 'frozen', False):
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+    pasta_dados = os.path.join(base_dir, "dados")
+    os.makedirs(pasta_dados, exist_ok=True)
+    return pasta_dados
+
+PASTA_DADOS = criar_pasta_dados()
 
 # Caminhos completos dos arquivos JSON
 ARQUIVO_CLIENTES = os.path.join(PASTA_DADOS, "clientes.json")
