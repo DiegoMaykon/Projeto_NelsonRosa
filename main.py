@@ -5,8 +5,7 @@ import json
 from datetime import datetime
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QVBoxLayout, QDesktopWidget, QWidget,
-    QHBoxLayout, QFileDialog, QMessageBox, QLabel
-)
+    QHBoxLayout, QFileDialog, QMessageBox, QLabel)
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QTimer
 from clientes import TelaClientes
@@ -14,20 +13,23 @@ from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
 from clientes import TelaClientes
 
+import os
+import sys
 
 def criar_pasta_dados():
-    """Cria a pasta de dados dentro do diretório do usuário (AppData/Roaming/NelsonRosa/dados)."""
-    from pathlib import Path
+    """Cria a pasta 'dados' no mesmo diretório do programa (funciona no .py e no .exe)."""
+    if getattr(sys, 'frozen', False):
+        # Quando for executável (.exe)
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        # Quando rodar via código Python
+        base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Pega a pasta do usuário (ex: C:\Users\Diego\AppData\Roaming)
-    pasta_base = Path(os.getenv("APPDATA"))
+    pasta_dados = os.path.join(base_dir, "dados")
+    os.makedirs(pasta_dados, exist_ok=True)
 
-    # Cria a estrutura NelsonRosa/dados
-    pasta_dados = pasta_base / "NelsonRosa" / "dados"
-    pasta_dados.mkdir(parents=True, exist_ok=True)
-
-    return str(pasta_dados)
-
+    print(f"Pasta de dados: {pasta_dados}")  # Debug opcional
+    return pasta_dados
 
 # Caminho base de dados
 PASTA_DADOS = criar_pasta_dados()
