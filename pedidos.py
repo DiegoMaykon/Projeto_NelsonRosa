@@ -120,16 +120,16 @@ class TelaPedidos(QWidget):
             btn_pdf.clicked.connect(lambda checked, p=pedido: self.gerar_pdf_pedido(p))
             self.tabela_filtrada.setCellWidget(row, 4, btn_pdf)
 
-    # Método para gerar PDF a partir de um pedido específico (usando mesma lógica de gerar_pdf)
+    # Método para gerar PDF do pedido
     def gerar_pdf_pedido(self, pedido):
+        import os, sys, json
         from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
         from reportlab.lib.pagesizes import A4
         from reportlab.lib import colors
         from reportlab.lib.styles import getSampleStyleSheet
-        import os
-        
+
         cliente = pedido["cliente"]
-        pasta_inicial = self.ultima_pasta if self.ultima_pasta else ""
+        pasta_inicial = getattr(self, "ultima_pasta", "")
         caminho, _ = QFileDialog.getSaveFileName(
             self,
             "Salvar PDF",
@@ -141,18 +141,19 @@ class TelaPedidos(QWidget):
 
         self.ultima_pasta = os.path.dirname(caminho)
 
-        # Configuração do PDF
+        # Criação do PDF
         doc = SimpleDocTemplate(caminho, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
         styles = getSampleStyleSheet()
         elementos = []
-# --- Título ---
+
+        # --- Título ---
         elementos.append(Paragraph(f"<b>Proposta Comercial nº {pedido['numero']}</b>", styles['Title']))
         elementos.append(Spacer(1, 10))
         data_pedido = pedido.get("data", "")
         if data_pedido:
             elementos.append(Paragraph(f"Data do Pedido: {data_pedido}", styles['Normal']))
-
         elementos.append(Spacer(1, 20))
+
         # --- Logo ---
         diretorio_atual = os.path.dirname(os.path.abspath(sys.argv[0]))
         logo_path = os.path.join(diretorio_atual, "logoverde.png")
@@ -161,7 +162,7 @@ class TelaPedidos(QWidget):
         else:
             img_logo = Spacer(1, 100)
 
-        # --- Dados Empresa (direita) ---
+        # --- Dados Empresa ---
         dados_empresa = [
             ["Iorli de Fatima Marcondes Rosa Representações"],
             ["CNPJ: 34.308.499/0001-10"],
@@ -179,27 +180,22 @@ class TelaPedidos(QWidget):
             ('BACKGROUND', (0,0), (-1,0), colors.lightgrey)
         ]))
 
-        # --- Header: Logo + Empresa ---
-        tabela_header = Table(
-            [[img_logo, tabela_empresa]],
-            colWidths=[120, 395]
-        )
+        # Header: Logo + Empresa
+        tabela_header = Table([[img_logo, tabela_empresa]], colWidths=[120, 395])
         tabela_header.setStyle(TableStyle([
-            ('VALIGN', (0,0), (0,0), 'TOP'),
-            ('VALIGN', (1,0), (1,0), 'TOP'),
+            ('VALIGN', (0,0), (-1,-1), 'TOP')
         ]))
-
         elementos.append(tabela_header)
         elementos.append(Spacer(1, 20))
 
-        # --- Dados Cliente (embaixo, sozinho à esquerda) ---
+        # --- Dados Cliente ---
         dados_cliente = [
             ["Dados do Cliente:"],
             [f"Nome: {cliente.get('nome', '')}"],
             [f"CPF/CNPJ: {cliente.get('cpf_cnpj', '')}"],
             [f"Email: {cliente.get('email', '')}"],
             [f"Telefone: {cliente.get('telefone', '')}"],
-            [f"Endereço:R.{cliente.get('rua', '')},N° {cliente.get('numero', '')} - {cliente.get('bairro', '')} - {cliente.get('cidade', '')} - {cliente.get('estado', '')}."],
+            [f"Endereço: R.{cliente.get('rua', '')}, Nº {cliente.get('numero', '')} - {cliente.get('bairro', '')} - {cliente.get('cidade', '')} - {cliente.get('estado', '')}."],
             [f"IE: {cliente.get('ie', '')}"]
         ]
         tabela_cliente = Table(dados_cliente, colWidths=[519], hAlign='LEFT')
@@ -211,28 +207,27 @@ class TelaPedidos(QWidget):
             ('BOX', (0,0), (-1,-1), 1, colors.black),
             ('BACKGROUND', (0,0), (-1,0), colors.lightgrey)
         ]))
-
         elementos.append(tabela_cliente)
         elementos.append(Spacer(1, 20))
 
         # --- Tabela de Itens ---
-
-# Carrega o JSON de acessórios
-        with open(r"D:\Projeto_NelsonRosa\acessorios.json", "r", encoding="utf-8") as f:
-            lista_acessorios = json.load(f)
+        try:
+            with open(r"D:\Projeto_NelsonRosa\acessorios.json", "r", encoding="utf-8") as f:
+                lista_acessorios = json.load(f)
+        except Exception:
+            lista_acessorios = []
 
         dados_itens = [["Código", "Item", "Qtd", "Subtotal (R$)"]]
-        for item in pedido["itens"]:
-            # Busca o código correspondente pelo nome
-            codigo = next((a["codigo"] for a in lista_acessorios if a["nome"] == item["nome"]), "")
+        for item in pedido.get("itens", []):
+            codigo = next((a["codigo"] for a in lista_acessorios if a["nome"] == item.get("nome")), "")
             dados_itens.append([
                 codigo,
-                item['nome'],
-                str(item['quantidade']),
-                f"{item['subtotal']:.2f}"
+                item.get('nome', ''),
+                str(item.get('quantidade', '')),
+                f"{item.get('subtotal', 0):.2f}"
             ])
 
-        tabela_itens = Table(dados_itens, colWidths=[70, 270, 50, 130],hAlign="LEFT")
+        tabela_itens = Table(dados_itens, colWidths=[70, 270, 50, 130], hAlign="LEFT")
         tabela_itens.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
             ('GRID', (0,0), (-1,-1), 1, colors.black),
@@ -245,11 +240,16 @@ class TelaPedidos(QWidget):
         elementos.append(tabela_itens)
         elementos.append(Spacer(1, 15))
 
-
-
-
         # --- Total ---
         elementos.append(Paragraph(f"<b>Total: R$ {pedido.get('total', 0):.2f}</b>", styles['Heading2']))
+
+        # --- Geração do PDF ---
+        try:
+            doc.build(elementos)
+            QMessageBox.information(self, "PDF Gerado", f"PDF salvo com sucesso em:\n{caminho}")
+        except Exception as e:
+            QMessageBox.warning(self, "Erro", f"Erro ao gerar PDF:\n{e}")
+
 
 
     # --------------------------

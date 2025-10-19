@@ -12,18 +12,24 @@ from PyQt5.QtCore import Qt, QTimer
 from clientes import TelaClientes
 from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
+from clientes import TelaClientes
 
 
 def criar_pasta_dados():
-    """Cria a pasta 'dados' na mesma pasta do main.py ou do .exe"""
-    if getattr(sys, 'frozen', False):
-        base_dir = os.path.dirname(sys.executable)
-    else:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-    pasta_dados = os.path.join(base_dir, "dados")
-    os.makedirs(pasta_dados, exist_ok=True)
-    return pasta_dados
+    """Cria a pasta de dados dentro do diretório do usuário (AppData/Roaming/NelsonRosa/dados)."""
+    from pathlib import Path
 
+    # Pega a pasta do usuário (ex: C:\Users\Diego\AppData\Roaming)
+    pasta_base = Path(os.getenv("APPDATA"))
+
+    # Cria a estrutura NelsonRosa/dados
+    pasta_dados = pasta_base / "NelsonRosa" / "dados"
+    pasta_dados.mkdir(parents=True, exist_ok=True)
+
+    return str(pasta_dados)
+
+
+# Caminho base de dados
 PASTA_DADOS = criar_pasta_dados()
 
 # Caminhos completos dos arquivos JSON
@@ -242,7 +248,6 @@ class TelaPrincipal(QMainWindow):
             caminho_antigo = os.path.join(pasta_backup, antigo)
             shutil.rmtree(caminho_antigo)
             print(f"Backup antigo removido: {caminho_antigo}")
-
 
 # ==============================
 # Execução
