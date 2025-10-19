@@ -8,13 +8,11 @@ from PyQt5.QtWidgets import (
     QHBoxLayout, QFileDialog, QMessageBox, QLabel)
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import Qt, QTimer
-from clientes import TelaClientes
 from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
+from config import PASTA_DADOS
 from clientes import TelaClientes
 
-import os
-import sys
 
 def criar_pasta_dados():
     """Cria a pasta 'dados' no mesmo diretório do programa (funciona no .py e no .exe)."""

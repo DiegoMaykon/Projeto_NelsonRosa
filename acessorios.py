@@ -2,13 +2,13 @@ import json
 import os
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton,
-    QTableWidget, QTableWidgetItem, QMessageBox, QTabWidget,QDesktopWidget
+    QTableWidget, QTableWidgetItem, QMessageBox, QTabWidget, QDesktopWidget
 )
-
-ARQUIVO_ACESSORIOS = "acessorios.json"
+from config import ARQUIVO_ACESSORIOS  # ✅ importa o caminho completo da pasta dados
 
 
 def carregar_acessorios():
+    """Carrega os acessórios salvos em JSON."""
     if os.path.exists(ARQUIVO_ACESSORIOS):
         with open(ARQUIVO_ACESSORIOS, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -16,6 +16,8 @@ def carregar_acessorios():
 
 
 def salvar_acessorios(acessorios):
+    """Salva os acessórios no arquivo JSON."""
+    os.makedirs(os.path.dirname(ARQUIVO_ACESSORIOS), exist_ok=True)  # ✅ garante que a pasta exista
     with open(ARQUIVO_ACESSORIOS, "w", encoding="utf-8") as f:
         json.dump(acessorios, f, indent=4, ensure_ascii=False)
 

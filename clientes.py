@@ -4,8 +4,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QTableWidget, QTableWidgetItem, QMessageBox, QHeaderView,QDesktopWidget
 )
-
-ARQUIVO_CLIENTES = "clientes.json"
+from config import ARQUIVO_CLIENTES
 
 class TelaClientes(QWidget):
     def __init__(self):

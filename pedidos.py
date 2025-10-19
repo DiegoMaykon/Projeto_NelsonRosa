@@ -10,9 +10,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QDate
 from reportlab.pdfgen import canvas
 
-ARQUIVO_PEDIDOS = "pedidos.json"
-ARQUIVO_CLIENTES = "clientes.json"
-ARQUIVO_ACESSORIOS = "acessorios.json"
+from config import ARQUIVO_CLIENTES, ARQUIVO_ACESSORIOS, ARQUIVO_PEDIDOS
 
 # --------------------------
 # Funções utilitárias
