@@ -1,0 +1,46 @@
+[
+    {
+        "numero": 1,
+        "cliente": {
+            "nome": "diego",
+            "cpf_cnpj": "07611432974",
+            "email": "",
+            "telefone": "",
+            "rua": "",
+            "numero": "",
+            "bairro": "",
+            "cidade": "",
+            "estado": "",
+            "ie": ""
+        },
+        "itens": [
+            {
+                "nome": "roldana",
+                "quantidade": 1,
+                "subtotal": 10.0
+            },
+            {
+                "nome": "roldana",
+                "quantidade": 1,
+                "subtotal": 10.0
+            },
+            {
+                "nome": "roldana",
+                "quantidade": 1,
+                "subtotal": 10.0
+            },
+            {
+                "nome": "roldana",
+                "quantidade": 1,
+                "subtotal": 10.0
+            },
+            {
+                "nome": "roldana",
+                "quantidade": 4,
+                "subtotal": 40.0
+            }
+        ],
+        "data": "19/10/2025",
+        "total": 80.0
+    }
+]

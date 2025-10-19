@@ -210,7 +210,7 @@ class TelaPedidos(QWidget):
 
         # --- Tabela de Itens ---
         try:
-            with open(r"D:\Projeto_NelsonRosa\acessorios.json", "r", encoding="utf-8") as f:
+            with open(ARQUIVO_ACESSORIOS, "r", encoding="utf-8") as f:
                 lista_acessorios = json.load(f)
         except Exception:
             lista_acessorios = []
@@ -626,7 +626,7 @@ class TelaPedidos(QWidget):
         # --- Tabela de Itens ---
 
 # Carrega o JSON de acessórios
-        with open(r"D:\Projeto_NelsonRosa\acessorios.json", "r", encoding="utf-8") as f:
+        with open(ARQUIVO_ACESSORIOS, "r", encoding="utf-8") as f:
             lista_acessorios = json.load(f)
 
         dados_itens = [["Código", "Item", "Qtd", "Subtotal (R$)"]]
