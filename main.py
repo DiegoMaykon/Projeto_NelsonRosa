@@ -12,22 +12,16 @@ from acessorios import TelaAcessorios
 from pedidos import TelaPedidos
 from config import PASTA_DADOS
 from clientes import TelaClientes
+from pathlib import Path
 
-
+# Função para criar pasta de dados
+# --------------------------
 def criar_pasta_dados():
-    """Cria a pasta 'dados' no mesmo diretório do programa (funciona no .py e no .exe)."""
-    if getattr(sys, 'frozen', False):
-        # Quando for executável (.exe)
-        base_dir = os.path.dirname(sys.executable)
-    else:
-        # Quando rodar via código Python
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-
-    pasta_dados = os.path.join(base_dir, "dados")
-    os.makedirs(pasta_dados, exist_ok=True)
-
-    print(f"Pasta de dados: {pasta_dados}")  # Debug opcional
-    return pasta_dados
+    """Cria a pasta 'dados' dentro do AppData/Roaming/NelsonRosa."""
+    pasta_appdata = Path(os.getenv("APPDATA")) / "NelsonRosa" / "dados"
+    pasta_appdata.mkdir(parents=True, exist_ok=True)
+    print(f"Pasta de dados: {pasta_appdata}")  # Debug opcional
+    return str(pasta_appdata)
 
 # Caminho base de dados
 PASTA_DADOS = criar_pasta_dados()
