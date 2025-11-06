@@ -152,13 +152,22 @@ class TelaPedidos(QWidget):
             elementos.append(Paragraph(f"Data do Pedido: {data_pedido}", styles['Normal']))
         elementos.append(Spacer(1, 20))
 
-        # --- Logo ---
-        diretorio_atual = os.path.dirname(os.path.abspath(sys.argv[0]))
-        logo_path = os.path.join(diretorio_atual, "logoverde.png")
+# --- Logo ---
+        def resource_path(relative_path):
+            try:
+                base_path = sys._MEIPASS  # pasta temporária do PyInstaller
+            except Exception:
+                base_path = os.path.abspath(".")
+            return os.path.join(base_path, relative_path)
+
+        logo_path = resource_path("logoverde.png")
+
+
         if os.path.exists(logo_path):
             img_logo = Image(logo_path, width=100, height=100)
         else:
             img_logo = Spacer(1, 100)
+
 
         # --- Dados Empresa ---
         dados_empresa = [
@@ -562,8 +571,17 @@ class TelaPedidos(QWidget):
             elementos.append(Paragraph(f"Data do Pedido: {data_pedido}", styles['Normal']))
 
         elementos.append(Spacer(1, 20))
-        # --- Logo ---
-        logo_path = r"D:\Projeto_NelsonRosa\logoverde.png"
+# --- Logo ---
+        def resource_path(relative_path):
+            try:
+                base_path = sys._MEIPASS  # pasta temporária do PyInstaller
+            except Exception:
+                base_path = os.path.abspath(".")
+            return os.path.join(base_path, relative_path)
+
+        logo_path = resource_path("logoverde.png")
+
+
         if os.path.exists(logo_path):
             img_logo = Image(logo_path, width=100, height=100)
         else:

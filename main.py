@@ -14,6 +14,17 @@ from config import PASTA_DADOS
 from clientes import TelaClientes
 from pathlib import Path
 
+# ==============================
+# 🔹 Função auxiliar para localizar imagens mesmo após empacotamento
+# ==============================
+def resource_path(relative_path):
+    """Obtém o caminho absoluto para recursos, compatível com PyInstaller."""
+    try:
+        base_path = sys._MEIPASS  # Diretório temporário usado pelo PyInstaller
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 # Função para criar pasta de dados
 # --------------------------
 def criar_pasta_dados():
@@ -46,9 +57,8 @@ class TelaPrincipal(QMainWindow):
         super().__init__()
         self.setWindowTitle("Sistema de Pedidos AL Metais - Nelson Rosa - V1.0")
 
-        # Caminho da imagem no mesmo diretório do script/executável
-        diretorio_atual = os.path.dirname(os.path.abspath(sys.argv[0]))
-        self.caminho_fundo = os.path.join(diretorio_atual, "logopreta2.png")
+        # 🔹 Caminho da imagem corrigido usando a função resource_path
+        self.caminho_fundo = resource_path("logopreta2.png")
 
         self.inicializar_ui()
         self.inicializar_backup_automatico()  # Ativa backup automático diário
